@@ -107,12 +107,15 @@ model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
 model=qwen2vlinstruct
 
 
-YOUR_CACHE_DIR=/data/khayatan/cache/
+# YOUR_CACHE_DIR=/data/khayatan/cache/
+cache_dir=/research/hal-afsharim/cache
 cache_dir=${YOUR_CACHE_DIR}
 
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+# YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+# YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
 data_dir=${YOUR_DATA_DIR}

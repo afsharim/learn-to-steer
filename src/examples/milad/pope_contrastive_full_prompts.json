@@ -1,0 +1,35 @@
+[
+  {
+    "idx": 0,
+    "image": "/research/hal-afsharim/learn-to-steer/data/pope/train/images/COCO_val2014_000000354229.jpg",
+    "scenario": "all",
+    "original_instruction": "Is there a person in the image? ",
+    "ground_truth_response": "yes",
+    "forced_positive_response_text": "Yes, the image",
+    "forced_negative_response_text": "No, the image",
+    "positive_full_prompt": "USER: <image>\nIs there a person in the image?  ASSISTANT: Yes, the image",
+    "negative_full_prompt": "USER: <image>\nIs there a person in the image?  ASSISTANT: No, the image"
+  },
+  {
+    "idx": 1,
+    "image": "/research/hal-afsharim/learn-to-steer/data/pope/train/images/COCO_val2014_000000308907.jpg",
+    "scenario": "all",
+    "original_instruction": "Is there a person in the image? ",
+    "ground_truth_response": "yes",
+    "forced_positive_response_text": "Yes, the image",
+    "forced_negative_response_text": "No, the image",
+    "positive_full_prompt": "USER: <image>\nIs there a person in the image?  ASSISTANT: Yes, the image",
+    "negative_full_prompt": "USER: <image>\nIs there a person in the image?  ASSISTANT: No, the image"
+  },
+  {
+    "idx": 2,
+    "image": "/research/hal-afsharim/learn-to-steer/data/pope/train/images/COCO_val2014_000000506178.jpg",
+    "scenario": "all",
+    "original_instruction": "Is there a remote in the image? ",
+    "ground_truth_response": "yes",
+    "forced_positive_response_text": "Yes, the image",
+    "forced_negative_response_text": "No, the image",
+    "positive_full_prompt": "USER: <image>\nIs there a remote in the image?  ASSISTANT: Yes, the image",
+    "negative_full_prompt": "USER: <image>\nIs there a remote in the image?  ASSISTANT: No, the image"
+  }
+]

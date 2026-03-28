@@ -16,7 +16,7 @@ class ImageTextDataset(Dataset):
     def __init__(
         self,
         annotation_file: str = "dataset_coco.json",
-        data_dir: str = "/data/mshukor/data",
+        data_dir: str = "/research/hal-afsharim/learn-to-steer/data",
         split: str = "train",
         dataset_size: int = -1,
         seed: int = 0,

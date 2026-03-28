@@ -1,11 +1,13 @@
 model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
-model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
-model=qwen
+# model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
+# model=qwen
 
-YOUR_DATA_DIR=/home/parekh/MM-SafetyBench/data/
-YOUR_SAVE_DIR=/home/parekh/id_steering/test_code/
+# YOUR_DATA_DIR=/home/parekh/MM-SafetyBench/data/
+# YOUR_SAVE_DIR=/home/parekh/id_steering/test_code/
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/mmsb/
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/id_steering/test_code/
 
 data_dir=${YOUR_DATA_DIR}
 save_dir=${YOUR_SAVE_DIR}
@@ -25,11 +27,11 @@ modules_to_hook=""
 
 for split in multi; do
 
-    #for i in 15; do                            # Steering layer Used for LLaVA
-    for i in 14; do                             # Steering layer Used for Qwen
+    for i in 15; do                            # Steering layer Used for LLaVA
+    # for i in 14; do                             # Steering layer Used for Qwen
 
-        modules_to_hook="model.layers.${i}" # Layer name for Qwen
-        #modules_to_hook="language_model.model.layers.${i}" # Layer name for LLaVA
+        # modules_to_hook="model.layers.${i}" # Layer name for Qwen
+        modules_to_hook="language_model.model.layers.${i}" # Layer name for LLaVA
         save_pos_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_${dataset_size}"
         save_neg_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_${dataset_size}"
 
@@ -37,7 +39,7 @@ for split in multi; do
         # Second command computes negative answer representations
         # Third command computes input context representations
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -48,13 +50,12 @@ for split in multi; do
             --hook_names $hook_names \
             --modules_to_hook $modules_to_hook \
             --save_filename ${save_pos_filename} \
-            --local_files_only \
             --force_answer \
             --forced_answer_true \
             --exact_match_modules_to_hook \
             --end_special_tokens "</s>"
         
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -65,20 +66,19 @@ for split in multi; do
             --hook_names $hook_names \
             --modules_to_hook $modules_to_hook \
             --save_filename ${save_neg_filename} \
-            --local_files_only \
             --force_answer \
             --exact_match_modules_to_hook \
             --end_special_tokens "</s>"
     done
 
-    #for i in 30; do                            # Context layer Used for LLaVA
-    for i in 14; do                             # Context layer Used for Qwen
+    for i in 30; do                            # Context layer Used for LLaVA
+    # for i in 14; do                             # Context layer Used for Qwen
 
         modules_to_hook="language_model.model.layers.${i}" # For LLaVA
-        modules_to_hook="model.layers.${i}" # For Qwen
-        save_cxt_filename="${model}_${dataset_name}_features_context_${i}_${split}_all_${dataset_size}_test"
+        # modules_to_hook="model.layers.${i}" # For Qwen
+        save_cxt_filename="${model}_${dataset_name}_features_context_${i}_${split}_all_${dataset_size}"
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -89,7 +89,6 @@ for split in multi; do
             --hook_names $hook_names \
             --modules_to_hook $modules_to_hook \
             --save_filename ${save_cxt_filename} \
-            --local_files_only \
             --exact_match_modules_to_hook \
             --end_special_tokens "</s>"
     done

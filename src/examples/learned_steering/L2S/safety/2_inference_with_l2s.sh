@@ -1,5 +1,5 @@
-#model_name_or_path=llava-hf/llava-1.5-7b-hf
-#model=llava
+# model_name_or_path=llava-hf/llava-1.5-7b-hf
+# model=llava
 
 model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
 model=qwen
@@ -8,10 +8,12 @@ model=qwen
 # YOUR_SAVE_DIR=/home/parekh/id_steering/test_code/
 # STEER_MODEL_NAME=/home/parekh/xl-vlms/llava_15_last_input_vlguard_train_-1.pt
 
-YOUR_DATA_DIR=/home/parekh/MM-SafetyBench/data/
-YOUR_SAVE_DIR=/home/parekh/id_steering/test_code/
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/mmsb/
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/id_steering/test_code/
 #STEER_MODEL_NAME=/home/parekh/id_steering/mmsb_steering_nets/llava_mmsb_steering_net_v3_multi_nobias_K100.pt
-STEER_MODEL_NAME=/home/parekh/id_steering/mmsb_steering_nets/qwen_14_last_input_multi_mmsb_train_-1_v2.pt
+# STEER_MODEL_NAME=/research/hal-afsharim/learn-to-steer/id_steering/mmsb_steering_nets/llava_15_last_input_multi_mmsb_train_-1_test.pt
+STEER_MODEL_NAME=/research/hal-afsharim/learn-to-steer/id_steering/mmsb_steering_nets/qwen2vlinstruct_14_last_input_multi_mmsb_train_-1_test.pt
+# STEER_MODEL_NAME=/home/parekh/id_steering/mmsb_steering_nets/qwen_14_last_input_multi_mmsb_train_-1_v2.pt
 steer_model_base=$(basename "$STEER_MODEL_NAME" .pt)
 
 
@@ -36,11 +38,11 @@ for split in multi; do
         for method in l2s; do
             shift_vector_path=${STEER_MODEL_NAME}
             save_filename="${model}_${dataset_name}_steer_${method}_${split}_${steering_alpha}_${steer_model_base}.pth"
-            #modules_to_hook="language_model.model.layers.30;language_model.model.layers.15" # Used for LLaVA experiments (MMSafety)
+            # modules_to_hook="language_model.model.layers.30;language_model.model.layers.15" # Used for LLaVA experiments (MMSafety)
             modules_to_hook="model.layers.14;model.layers.14" # Used for Qwen experiments (MMSafety)
             #modules_to_hook="language_model.model.layers.15;language_model.model.layers.15" # Used for LLaVA with VLGuard exps
 
-            python src/save_features.py \
+            CUDA_VISIBLE_DEVICES=2 python src/save_features.py \
                 --model_name_or_path $model_name_or_path \
                 --save_dir $save_dir \
                 --data_dir $data_dir \

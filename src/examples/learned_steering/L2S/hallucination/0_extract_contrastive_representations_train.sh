@@ -2,15 +2,15 @@ model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/train
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/train
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
 data_dir=${YOUR_DATA_DIR}
 save_dir=${YOUR_SAVE_DIR}
 
 
-save_dir=/data/khayatan/Hallucination/POPE/hallucination
+save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 dataset_name=pope_train
 dataset_size=-1
 
@@ -29,7 +29,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -42,7 +42,6 @@ for split in all; do
             --modules_to_hook $modules_to_hook \
             --generation_mode \
             --save_filename ${save_filename} \
-            --local_files_only \
             --force_answer \
             --forced_answer_true \
             --exact_match_modules_to_hook \
@@ -61,7 +60,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -73,7 +72,6 @@ for split in all; do
             --modules_to_hook $modules_to_hook \
             --generation_mode \
             --save_filename ${save_filename} \
-            --local_files_only \
             --force_answer \
             --exact_match_modules_to_hook \
             --end_special_tokens "</s>" \
@@ -94,18 +92,19 @@ done
 
 model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
 model=qwen2vlinstruct
-cache_dir=/data/khayatan/cache/
+# cache_dir=/data/khayatan/cache/
+cache_dir=/research/hal-afsharim/cache
 
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/train
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/train
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
 data_dir=${YOUR_DATA_DIR}
 save_dir=${YOUR_SAVE_DIR}
 
 
-save_dir=/data/khayatan/Hallucination/POPE/hallucination
+save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 dataset_name=pope_train
 dataset_size=-1
 
@@ -124,7 +123,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
@@ -138,7 +137,6 @@ for split in all; do
             --modules_to_hook $modules_to_hook \
             --generation_mode \
             --save_filename ${save_filename} \
-            --local_files_only \
             --force_answer \
             --forced_answer_true \
             --exact_match_modules_to_hook \
@@ -157,7 +155,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
@@ -170,7 +168,6 @@ for split in all; do
             --modules_to_hook $modules_to_hook \
             --generation_mode \
             --save_filename ${save_filename} \
-            --local_files_only \
             --force_answer \
             --exact_match_modules_to_hook \
             --end_special_tokens "</s>" \
@@ -183,7 +180,7 @@ done
 
 
 
-"""
-/data/khayatan/Hallucination/POPE/hallucination/features/save_hidden_states_for_l2s_qwen2vlinstruct_pope_train_features_neg_answers_14_all_all_train_-1.pth
+# """
+# /data/khayatan/Hallucination/POPE/hallucination/features/save_hidden_states_for_l2s_qwen2vlinstruct_pope_train_features_neg_answers_14_all_all_train_-1.pth
 
-"""
+# """

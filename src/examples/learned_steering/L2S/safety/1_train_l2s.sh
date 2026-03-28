@@ -1,15 +1,17 @@
-model_name_or_path=llava-hf/llava-1.5-7b-hf
-model=llava
+# model_name_or_path=llava-hf/llava-1.5-7b-hf
+# model=llava
 
 model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
 model=qwen
 
 
 
-features_dir=/home/parekh/id_steering/test_code/features
+# features_dir=/home/parekh/id_steering/test_code/features
+features_dir=/research/hal-afsharim/learn-to-steer/id_steering/test_code/features
 
 shift_type=last_input
-save_dir=/home/parekh/id_steering/test_code/
+# save_dir=/home/parekh/id_steering/test_code/
+save_dir=/research/hal-afsharim/learn-to-steer/id_steering/test_code/
 
 analysis_name=learnable_steering_train
 dataset_name=mmsb
@@ -19,10 +21,10 @@ for split in multi; do
 
     for i in 15; do
 
-        pos_features_name=save_hidden_states_for_l2s_llava_mmsb_features_pos_answers_15_multi_all_-1.pth # For LLaVA-mmsb
-        neg_features_name=save_hidden_states_for_l2s_llava_mmsb_features_neg_answers_15_multi_all_-1.pth # For LLaVA-mmsb
-        cxt_features_name=save_hidden_states_for_l2s_llava_mmsb_features_context_30_multi_all_-1.pth # For LLaVA-mmsb
-        modules_to_hook="language_model.model.layers.${i};language_model.model.layers.30"
+        # pos_features_name=save_hidden_states_for_l2s_llava_mmsb_features_pos_answers_15_multi_all_-1.pth # For LLaVA-mmsb
+        # neg_features_name=save_hidden_states_for_l2s_llava_mmsb_features_neg_answers_15_multi_all_-1.pth # For LLaVA-mmsb
+        # cxt_features_name=save_hidden_states_for_l2s_llava_mmsb_features_context_30_multi_all_-1.pth # For LLaVA-mmsb
+        # modules_to_hook="language_model.model.layers.${i};language_model.model.layers.30"
 
         pos_features_name=save_hidden_states_for_l2s_qwen_mmsb_features_pos_answers_14_multi_all_-1.pth # For Qwen-mmsb
         neg_features_name=save_hidden_states_for_l2s_qwen_mmsb_features_neg_answers_14_multi_all_-1.pth # For Qwen-mmsb
@@ -32,7 +34,7 @@ for split in multi; do
         save_filename=${split}_mmsb_train_-1_test
 
 
-        python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=2 python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --dataset_name $dataset_name \
             --save_dir $save_dir \

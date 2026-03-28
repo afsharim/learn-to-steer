@@ -1,9 +1,12 @@
 model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
-STEERING_VECTORS=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/llava_14_average_all_pope_train_-1_mean.pth
+# YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+# YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
+# STEERING_VECTORS=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/llava_14_average_all_pope_train_-1_mean.pth
+STEERING_VECTORS=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/shift_vectors/llava_14_average_all_pope_train_-1_mean.pth
 steering_vectors_base_name=$(basename "$STEERING_VECTORS" .pth)
 
 data_dir=${YOUR_DATA_DIR}
@@ -27,7 +30,7 @@ for split in adversarial popular random; do
         modules_to_hook="language_model.model.layers.${i}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --data_dir $data_dir \
@@ -39,7 +42,6 @@ for split in adversarial popular random; do
             --generation_mode \
             --save_filename $save_filename \
             --save_predictions \
-            --local_files_only \
             --exact_match_modules_to_hook \
             --shift_vector_path $shift_vector_path \
             --steering_alpha $steering_alpha \
@@ -52,25 +54,29 @@ done
 
 
 
-"""
-Saving data to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_llava_14_average_all_pope_train_-1_mean.json
-Saving 643 predictions to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_llava_14_average_all_pope_train_-1_mean_model_prediction.json
+# """
+# Saving data to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_llava_14_average_all_pope_train_-1_mean.json
+# Saving 643 predictions to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_llava_14_average_all_pope_train_-1_mean_model_prediction.json
 
-"""
+# """
 
 
 
 
 model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
 model=qwen2vlinstruct
-cache_dir=/data/khayatan/cache/
+# cache_dir=/data/khayatan/cache/
+cache_dir=/research/hal-afsharim/cache
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
-STEERING_VECTORS=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/qwen2vlinstruct_14_average_all_pope_train_-1_mean.pth
-STEERING_VECTORS=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/qwen2vlinstruct_17_average_all_pope_train_-1_mean.pth
+# YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+# YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
+# STEERING_VECTORS=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/qwen2vlinstruct_14_average_all_pope_train_-1_mean.pth
+STEERING_VECTORS=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/shift_vectors/qwen2vlinstruct_17_average_all_pope_train_-1_mean.pth
+# STEERING_VECTORS=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/qwen2vlinstruct_17_average_all_pope_train_-1_mean.pth
 steering_vectors_base_name=$(basename "$STEERING_VECTORS" .pth)
 
 data_dir=${YOUR_DATA_DIR}
@@ -94,7 +100,7 @@ for split in adversarial popular random; do
         modules_to_hook="model.layers.${i}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \
@@ -107,7 +113,6 @@ for split in adversarial popular random; do
             --generation_mode \
             --save_filename $save_filename \
             --save_predictions \
-            --local_files_only \
             --exact_match_modules_to_hook \
             --shift_vector_path $shift_vector_path \
             --steering_alpha $steering_alpha \
@@ -120,10 +125,10 @@ done
 
 
 
-"""
-Saving data to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_qwen2vlinstruct_17_average_all_pope_train_-1_mean.json
-Saving 643 predictions to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_qwen2vlinstruct_17_average_all_pope_train_-1_mean_model_prediction.json
+# """
+# Saving data to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_qwen2vlinstruct_17_average_all_pope_train_-1_mean.json
+# Saving 643 predictions to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_qwen2vlinstruct_17_average_all_pope_train_-1_mean_model_prediction.json
 
-"""
+# """

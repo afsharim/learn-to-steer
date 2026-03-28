@@ -3,10 +3,12 @@ model=llava
 
 
 
-features_dir=/data/khayatan/Hallucination/POPE/hallucination/features
+# features_dir=/data/khayatan/Hallucination/POPE/hallucination/features
+features_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/features
 
 shift_type=average
-save_dir=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors
+# save_dir=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors
+save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/shift_vectors
 
 analysis_name=learnable_steering
 
@@ -36,10 +38,10 @@ for split in adversarial popular random; do
     done
 done
 
-"""
-Saving individual shift vectors in : 
-/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/llava_14_average_random_pope_test_-1.pth
-"""
+# """
+# Saving individual shift vectors in : 
+# /data/khayatan/Hallucination/POPE/hallucination/shift_vectors/llava_14_average_random_pope_test_-1.pth
+# """
 
 
 
@@ -49,12 +51,14 @@ Saving individual shift vectors in :
 
 model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
 model=qwen2vlinstruct
-cache_dir=/data/khayatan/cache/
+# cache_dir=/data/khayatan/cache/
+cache_dir=/research/hal-afsharim/cache
 
-features_dir=/data/khayatan/Hallucination/POPE/hallucination/features
-
+# features_dir=/data/khayatan/Hallucination/POPE/hallucination/features
+features_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/features
 shift_type=average
-save_dir=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors
+# save_dir=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors
+save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/shift_vectors
 
 analysis_name=learnable_steering
 
