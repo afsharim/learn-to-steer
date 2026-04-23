@@ -465,5 +465,12 @@ def get_arguments():
         default=None,
         help="Path to the file with ids of samples to be filtered.",
     )
+    
+    
+    parser.add_argument("--save_behavioral_separation", action="store_true", 
+                        help="Split saved features into Correct/Incorrect bins based on Ground Truth.")
+    
+    parser.add_argument("--global_center_path", type=str, 
+                        default=None, help="Path to the global center tensor for Affine Rotation")
 
     return parser.parse_args()

@@ -16,7 +16,7 @@ from helpers.utils import (clear_forward_hooks, clear_hooks_variables,
 from models import get_model_class
 from models.image_text_model import ImageTextModel
 import gc, psutil
-
+import re
 
 
 @torch.no_grad()
@@ -222,9 +222,30 @@ def inference(
             )
             item["model_output"] = out # Don't use this for inference mode, consumes lot more memory then
             item["model_generated_output"] = out[:, input_len:]
-            item["model_predictions"] = model_class.get_tokenizer().batch_decode(
+            decoded_preds = model_class.get_tokenizer().batch_decode(
                 out[:, input_len:], skip_special_tokens=True
             )
+            item["model_predictions"] = decoded_preds
+            
+            # --- BEHAVIORAL HARVESTING LOGIC ---
+            # Check if we should split based on model's natural performance
+            if getattr(args, "save_behavioral_separation", False):
+                model_ans = decoded_preds[0].lower().strip()
+                # POPE labels are typically strings like "yes" or "no"
+                ground_truth = response.lower().strip()
+# 2. Use regex to find the first standalone "yes" or "no" in the model's sentence
+                match = re.search(r'\b(yes|no)\b', model_ans)
+                
+                if match:
+                    # Extract just the "yes" or "no"
+                    parsed_model_ans = match.group(1)
+                    # Compare the extracted word to the ground truth
+                    item["is_correct"] = (parsed_model_ans == ground_truth)
+                else:
+                    # If the model rambles and never says yes or no, mark it as a failure
+                    item["is_correct"] = False
+            # -----------------------------------
+            # -----------------------------------
 
             # print(model_class.get_tokenizer().batch_decode(
             #     out[:, :], skip_special_tokens=True

@@ -215,6 +215,131 @@ def set_steering_vector(vector: torch.Tensor = None):
     PREDICTED_STEER = vector
 
 
+
+########################################################
+# ==========================================
+# NOVEL ANGULAR STEERING ADDITIONS
+# ==========================================
+import os
+
+ANGULAR_COMPASS = None
+PREDICTED_THETA = None
+SAMPLE_COUNTER = 0
+
+def set_angular_steering(compass_vector: torch.Tensor = None, theta: torch.Tensor = None):
+    global ANGULAR_COMPASS, PREDICTED_THETA
+    if compass_vector is not None:
+        ANGULAR_COMPASS = compass_vector
+    if theta is not None:
+        PREDICTED_THETA = theta
+
+def apply_angular_steering(
+    x: torch.Tensor,
+    compass_vector: torch.Tensor,
+    theta: float,
+    only_generated_tokens: bool = False,
+    include_last_prompt_token: bool = False,
+    start_prompt_token_idx: int = 0,
+    individual_shift: bool = False,
+) -> torch.Tensor:
+    global SAMPLE_COUNTER
+
+    if compass_vector is None:
+        return x
+        
+    z = compass_vector.to(x.device).to(x.dtype)
+    
+    # --- DYNAMIC ROW SELECTION ---
+    if x.shape[1] > 1: # Sequence generation (prefill pass)
+        if individual_shift and z.dim() > 1 and z.shape[0] > 1:
+            SAMPLE_COUNTER += 1
+            z = z[SAMPLE_COUNTER - 1] 
+        elif z.dim() > 1:
+            z = z[0] 
+    else: # Autoregressive decoding (token-by-token pass)
+        if individual_shift and z.dim() > 1 and z.shape[0] > 1:
+            z = z[SAMPLE_COUNTER - 1]
+        elif z.dim() > 1:
+            z = z[0]
+            
+    # Guarantee a strict 1D tensor of shape [4096]
+    z = z.reshape(-1) 
+    z_normed = z / (torch.norm(z) + 1e-8)
+    
+    # theta_ratio is now a PROPORTION (e.g., 0.10 = 10% of the distance to the target)
+    theta_ratio = float(theta)
+    
+    # --- Sequence generation (first pass) ---
+    if x.shape[1] > 1:
+        if only_generated_tokens:
+            return x
+        if include_last_prompt_token:
+            start_prompt_token_idx = -1
+            
+        if start_prompt_token_idx > 0 or start_prompt_token_idx == -1:
+            x_ = x[:, start_prompt_token_idx:, :]
+            
+            h_norm = torch.norm(x_, dim=-1, keepdim=True)
+            e1 = x_ / (h_norm + 1e-8)
+            
+            # # 1. Calculate the natural dynamic angle to the target
+            # cos_sim = torch.sum(e1 * z_normed, dim=-1, keepdim=True)
+            # cos_sim = torch.clamp(cos_sim, -1.0 + 1e-8, 1.0 - 1e-8)
+            # natural_angle = torch.acos(cos_sim)
+            
+            # # --> LOGGING THE ANGLE <--
+            # # We save the mean natural angle of this pass to a text file
+            # with open("natural_angles_log.txt", "a") as f:
+            #     f.write(f"Prefill Phase Angle: {natural_angle.mean().item():.4f} radians\n")
+            
+            # # # 2. Scale the rotation proportionally
+            # # theta_t = natural_angle * theta_ratio
+            theta_t = theta_ratio
+            # 3. Gram-Schmidt Orthogonalization
+            projection = torch.sum(z * e1, dim=-1, keepdim=True) * e1
+            z_perp = z - projection
+            e2 = z_perp / (torch.norm(z_perp, dim=-1, keepdim=True) + 1e-8)
+            
+            # 4. Apply Rotation
+            cos_theta = torch.cos(theta_t)
+            sin_theta = torch.sin(theta_t)
+            
+            x_rotated = h_norm * (cos_theta * e1 + sin_theta * e2)
+            x[:, start_prompt_token_idx:, :] = x_rotated
+            return x
+            
+    # --- Autoregressive decoding (token-by-token pass) ---
+    h_norm = torch.norm(x, dim=-1, keepdim=True)
+    e1 = x / (h_norm + 1e-8)
+    
+    # 1. Calculate the natural dynamic angle
+    cos_sim = torch.sum(e1 * z_normed, dim=-1, keepdim=True)
+    cos_sim = torch.clamp(cos_sim, -1.0 + 1e-8, 1.0 - 1e-8)
+    natural_angle = torch.acos(cos_sim)
+    
+    # --> LOGGING THE ANGLE <--
+    with open("natural_angles_log.txt", "a") as f:
+        f.write(f"Decoding Phase Angle: {natural_angle.mean().item():.4f} radians\n")
+    
+    # 2. Scale proportionally
+    theta_t = float(theta_ratio)
+    
+    # 3. Gram-Schmidt
+    projection = torch.sum(z * e1, dim=-1, keepdim=True) * e1
+    z_perp = z - projection
+    e2 = z_perp / (torch.norm(z_perp, dim=-1, keepdim=True) + 1e-8)
+    
+    # 4. Apply Rotation
+    cos_theta = torch.cos(theta_t)
+    sin_theta = torch.sin(theta_t)
+    
+    x = h_norm * (cos_theta * e1 + sin_theta * e2)
+    return x
+# ==========================================
+########################################################
+
+
+
 def shift_hidden_states(
     vector: torch.Tensor = None,
     operation: str = "add",
@@ -280,6 +405,29 @@ def shift_hidden_states(
                     no_implicit_model=no_implicit_model
                 )
                 return output
+            
+    elif "angular_steer" in operation:
+            def hook(module, input, output):
+                if isinstance(output, tuple):
+                    output_ = apply_angular_steering(
+                        output[0],
+                        compass_vector=vector, # The loaded .pth tensor
+                        theta=alpha,           # The angle passed from your bash script
+                        only_generated_tokens=only_generated_tokens,
+                        include_last_prompt_token=include_last_prompt_token,
+                        start_prompt_token_idx=start_prompt_token_idx,
+                    )
+                    return (output_,) + output[1:]
+                else:
+                    output = apply_angular_steering(
+                        output,
+                        compass_vector=vector,
+                        theta=alpha,
+                        only_generated_tokens=only_generated_tokens,
+                        include_last_prompt_token=include_last_prompt_token,
+                        start_prompt_token_idx=start_prompt_token_idx,
+                    )
+                    return output
             
 
     else:
@@ -495,21 +643,49 @@ def save_hidden_states_to_file(
     args: argparse.Namespace = None,
     logger: Callable = None,
 ) -> None:
-    saved_data = {}
+    # --- BEHAVIORAL HARVESTING LOGIC ---
+    if getattr(args, "save_behavioral_separation", False) and "is_correct" in data:
+        # Initialize dictionaries to hold the split data
+        pos_data = {k: [] for k in data_keys if k in data}
+        neg_data = {k: [] for k in data_keys if k in data}
 
-    for data_key in data.keys():
-        if data_key in data_keys:
-            assert (
-                data_key in data
-            ), f"{data_key} not found in data, there is only: {data.keys()}"
+        for i, correct in enumerate(data["is_correct"]):
+            if correct:
+                for k in pos_data.keys():
+                    pos_data[k].append(data[k][i])
+            else:
+                for k in neg_data.keys():
+                    neg_data[k].append(data[k][i])
 
-            saved_data[data_key] = data[data_key]  # List[Any]
-    file_name = os.path.join(
-        args.save_dir, "features", f"{hook_name}_{args.save_filename}.pth"
-    )
-    torch.save(saved_data, file_name)
-    if logger is not None:
-        logger.info(f"Saving data to: {file_name}")
+        # Define save paths
+        base_path = os.path.join(args.save_dir, "features")
+        os.makedirs(base_path, exist_ok=True)
+        
+        path_pos = os.path.join(base_path, f"POS_NONHAL_{hook_name}_{args.save_filename}.pth")
+        path_neg = os.path.join(base_path, f"NEG_HAL_{hook_name}_{args.save_filename}.pth")
+        
+        torch.save(pos_data, path_pos)
+        torch.save(neg_data, path_neg)
+        
+        if logger is not None:
+            logger.info(f"Behavioral Harvest Saved: {len(pos_data['hidden_states'])} POS (Truth) and {len(neg_data['hidden_states'])} NEG (Hallucinations)")
+    
+    else: 
+        saved_data = {}
+
+        for data_key in data.keys():
+            if data_key in data_keys:
+                assert (
+                    data_key in data
+                ), f"{data_key} not found in data, there is only: {data.keys()}"
+
+                saved_data[data_key] = data[data_key]  # List[Any]
+        file_name = os.path.join(
+            args.save_dir, "features", f"{hook_name}_{args.save_filename}.pth"
+        )
+        torch.save(saved_data, file_name)
+        if logger is not None:
+            logger.info(f"Saving data to: {file_name}")
 
 
 def save_analysis_to_file(
@@ -640,6 +816,8 @@ def register_hooks(
             operation = "add"
         elif "learned_steer" in hook_name:
             operation = "learned_steer"
+        elif "angular_steer" in hook_name:      # <--- ADDED THIS
+            operation = "angular_steer"         # <--- ADDED THIS
         else:
             raise NotImplementedError(
                 f"Please provide a valid operation. Got {hook_name}"
@@ -650,7 +828,7 @@ def register_hooks(
         no_implicit_model = "no_implicit_model" in hook_name
 
 
-        if "learned_steer" in hook_name:
+        if "learned_steer" in hook_name: # <--- ADDED THIS
 
             # Re-create the model architecture (same input/output/hidden sizes)
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -1,8 +1,10 @@
 model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+# YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+# YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 data_dir=${YOUR_DATA_DIR}
 save_dir=${YOUR_SAVE_DIR}
@@ -23,12 +25,12 @@ for subset in adversarial popular random; do
     for steering_alpha in 1; do
 
         for i in 14; do
-            shift_vector_path=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/${model}_${i}_average_${subset}_${dataset_name}_${dataset_size}.pth
+            shift_vector_path=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/shift_vectors/${model}_${i}_average_${subset}_${dataset_name}_${dataset_size}.pth
             save_filename="${model}_${dataset_name}_steer_${i}_yes_no_${subset}_${steering_alpha}_p2s"
             modules_to_hook="language_model.model.layers.${i}"
 
 
-            python src/save_features.py \
+            CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
                 --model_name_or_path $model_name_or_path \
                 --save_dir $save_dir \
                 --data_dir $data_dir \
@@ -56,12 +58,12 @@ done
 
 
 
-"""
-Saving data to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_p2s.json
-Saving 643 predictions to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_p2s_model_prediction.json
-"""
+# """
+# Saving data to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_p2s.json
+# Saving 643 predictions to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_llava_pope_test_steer_14_yes_no_random_1_p2s_model_prediction.json
+# """
 
 
 
@@ -70,10 +72,13 @@ Saving 643 predictions to:
 
 model_name_or_path=Qwen/Qwen2-VL-7B-Instruct
 model=qwen2vlinstruct
-cache_dir=/data/khayatan/cache/
+# cache_dir=/data/khayatan/cache/
+cache_dir=/research/hal-afsharim/cache
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+# YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+# YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 data_dir=${YOUR_DATA_DIR}
 save_dir=${YOUR_SAVE_DIR}
@@ -94,12 +99,12 @@ for subset in adversarial popular random; do
     for steering_alpha in 1; do
 
         for i in 17; do
-            shift_vector_path=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors/${model}_${i}_average_${subset}_${dataset_name}_${dataset_size}.pth
+            shift_vector_path=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/shift_vectors/${model}_${i}_average_${subset}_${dataset_name}_${dataset_size}.pth
             save_filename="${model}_${dataset_name}_steer_${i}_yes_no_${subset}_${steering_alpha}_p2s"
             modules_to_hook="model.layers.${i}"
 
 
-            python src/save_features.py \
+            CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
                 --model_name_or_path $model_name_or_path \
                 --cache_dir $cache_dir \
                 --save_dir $save_dir \
@@ -128,9 +133,9 @@ done
 
 
 
-"""
-Saving data to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_p2s.json
-Saving 643 predictions to: 
-/data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_p2s_model_prediction.json
-"""
+# """
+# Saving data to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_p2s.json
+# Saving 643 predictions to: 
+# /data/khayatan/Hallucination/POPE/hallucination/hallucination_metrics_qwen2vlinstruct_pope_test_steer_17_yes_no_random_1_p2s_model_prediction.json
+# """

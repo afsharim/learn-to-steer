@@ -4,3 +4,6 @@ id_steering/
 results/
 *.pt
 *.pth
+annotations/
+natural_angles_log.txt
+*.DS_Store

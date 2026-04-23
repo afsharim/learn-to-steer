@@ -5,8 +5,10 @@ model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
 
-YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test # TO BE REPLACED WITH YOUR TEST DIR FOR POPE (NO OFFICIAL PARTITION)
-YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination # TO BE REPLACED WITH YOUR SAVE DIR FOR POPE
+# YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test # TO BE REPLACED WITH YOUR TEST DIR FOR POPE (NO OFFICIAL PARTITION)
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+# YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination # TO BE REPLACED WITH YOUR SAVE DIR FOR POPE
+YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
 data_dir=${YOUR_DATA_DIR}
@@ -29,7 +31,7 @@ for split in adversarial popular random; do
         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -65,7 +67,7 @@ for split in adversarial popular random; do
         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -109,7 +111,7 @@ model=qwen2vlinstruct
 
 # YOUR_CACHE_DIR=/data/khayatan/cache/
 cache_dir=/research/hal-afsharim/cache
-cache_dir=${YOUR_CACHE_DIR}
+# cache_dir=${YOUR_CACHE_DIR}
 
 
 # YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
@@ -137,7 +139,7 @@ for split in adversarial popular random; do
         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
@@ -173,7 +175,7 @@ for split in adversarial popular random; do
         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_${dataset_size}"
 
 
-        python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \

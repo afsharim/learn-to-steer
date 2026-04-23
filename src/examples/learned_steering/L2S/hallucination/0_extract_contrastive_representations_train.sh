@@ -29,7 +29,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -60,7 +60,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -123,7 +123,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
@@ -155,7 +155,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_train_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \

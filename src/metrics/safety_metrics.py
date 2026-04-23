@@ -166,11 +166,14 @@ def compute_safety_metrics(
 
     # Harmfulness eval
     scores = harmfulness_eval(data)
+    results["unsafe_probs"] = scores # for further analysis
     for thresh in [0.5, 0.7, 0.9]:
         cur_unsafe = unsafe_score_mean(scores, thresh_min=thresh)
         print (thresh, cur_unsafe)
         #logger.info(f"Threshold {thresh}, Expected value of unsafe score over this threshold -- {cur_unsafe}")
+        results[f"unsafe_score@{thresh}"] = cur_unsafe
     
+ 
     # Expert-deference eval
     ed_score = ed_score_eval(data)
     results["ED-score"] = ed_score
