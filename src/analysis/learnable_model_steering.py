@@ -73,7 +73,7 @@ class SteeringDataset(Dataset):
             self.train_indices = indices[:train_size]
             self.val_indices = indices[train_size:]
         elif "mmsb" in self.dataset_name:
-            train_ratio, seed = 0.8, 21 # split generated from (seed=21) used in main mmsb experiments since the very first experiment
+            train_ratio, seed = 0.8, 0 # split generated from (seed=21) used in main mmsb experiments since the very first experiment
             all_idx = np.arange(total_size)
             n_train = int(total_size * train_ratio)
             np.random.seed(seed)

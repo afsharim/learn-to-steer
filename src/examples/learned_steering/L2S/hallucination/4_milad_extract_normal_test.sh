@@ -15,7 +15,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 dataset_name=pope_test
 dataset_size=-1
-max_new_tokens=128
+max_new_tokens=100
 steering_alpha=1
 hook_names=("save_hidden_states") # should add the evaluation right here
 
@@ -30,7 +30,7 @@ for split in adversarial popular random; do
         save_filename="${model}_${dataset_name}_features_normal_${i}_${split}_${dataset_size}_milad"
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --data_dir $data_dir \
@@ -82,7 +82,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 dataset_name=pope_test
 dataset_size=-1
-max_new_tokens=128
+max_new_tokens=100
 steering_alpha=1
 hook_names=("save_hidden_states") # should add the evaluation right here
 
@@ -97,7 +97,7 @@ for split in adversarial popular random; do
 
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \

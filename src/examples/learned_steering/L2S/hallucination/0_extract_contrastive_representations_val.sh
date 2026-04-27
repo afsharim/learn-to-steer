@@ -2,7 +2,7 @@ model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
 
-YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/train
 YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
@@ -11,7 +11,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 
 save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
-dataset_name=pope_test
+dataset_name=pope_val
 dataset_size=-1
 
 max_new_tokens=100
@@ -21,12 +21,12 @@ hook_names=("save_hidden_states_for_l2s")
 modules_to_hook=""
 
 # individual splits of the pope dataset adversarial popular random
-for split in adversarial popular random; do
+for split in all; do
 
     for i in 14; do
 
         modules_to_hook="language_model.model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_test_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_val_${dataset_size}"
 
 
         CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
@@ -52,12 +52,12 @@ done
 
 
 
-for split in adversarial popular random; do
+for split in all; do
 
     for i in 14; do
 
         modules_to_hook="language_model.model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_test_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_val_${dataset_size}"
 
 
         CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
@@ -96,7 +96,7 @@ model=qwen2vlinstruct
 cache_dir=/research/hal-afsharim/cache
 
 
-YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/train
 YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
@@ -105,7 +105,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 
 save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
-dataset_name=pope_test
+dataset_name=pope_val
 dataset_size=-1
 
 max_new_tokens=100
@@ -115,12 +115,12 @@ hook_names=("save_hidden_states_for_l2s")
 modules_to_hook=""
 
 # individual splits of the pope dataset adversarial popular random
-for split in adversarial popular random; do
+for split in all; do
 
     for i in 17; do
 
         modules_to_hook="model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_test_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_val_${dataset_size}"
 
 
         CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
@@ -147,12 +147,12 @@ done
 
 
 
-for split in adversarial popular random; do
+for split in all; do
 
     for i in 17; do
 
         modules_to_hook="model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_test_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_val_${dataset_size}"
 
 
         CUDA_VISIBLE_DEVICES=6 python src/save_features.py \

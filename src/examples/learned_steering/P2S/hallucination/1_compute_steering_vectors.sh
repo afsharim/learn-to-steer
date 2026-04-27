@@ -17,15 +17,15 @@ for split in adversarial popular random; do
 
     for i in 14; do
 
-        pos_features_name=save_hidden_states_for_l2s_llava_pope_test_features_pos_answers_${i}_${split}_-1.pth
-        neg_features_name=save_hidden_states_for_l2s_llava_pope_test_features_neg_answers_${i}_${split}_-1.pth
+        pos_features_name=save_hidden_states_for_l2s_llava_pope_test_features_pos_answers_${i}_${split}_all_test_-1.pth
+        neg_features_name=save_hidden_states_for_l2s_llava_pope_test_features_neg_answers_${i}_${split}_all_test_-1.pth
 
 
         modules_to_hook="language_model.model.layers.${i};language_model.model.layers.${i}"
         save_filename=${split}_pope_test_-1
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=6 python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --analysis_name $analysis_name \
@@ -67,14 +67,14 @@ for split in adversarial popular random; do
 
     for i in 17; do
 
-        pos_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_pos_answers_${i}_${split}_-1.pth
-        neg_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_neg_answers_${i}_${split}_-1.pth
+        pos_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_pos_answers_${i}_${split}_all_test_-1.pth
+        neg_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_neg_answers_${i}_${split}_all_test_-1.pth
 
         modules_to_hook="model.layers.${i};model.layers.${i}"
         save_filename=${split}_pope_test_-1
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=6 python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \
