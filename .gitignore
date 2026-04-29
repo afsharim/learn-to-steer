@@ -7,3 +7,4 @@ results/
 annotations/
 natural_angles_log.txt
 *.DS_Store
+*.txt
