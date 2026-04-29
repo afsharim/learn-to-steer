@@ -1,21 +1,13 @@
-import numpy as np
 import torch
-import os
-from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
+from tqdm import trange
+from datetime import datetime
+import os
+import numpy as np
+from collections import defaultdict, Counter
+from sklearn.model_selection import train_test_split
 import random
-
-
-def cross_cov(x, y):
-    return 1 / x.shape[0] * x.T @ y
-
-def convert_to_onehot(data):
-    data = data.astype(int)
-    n_train = data.shape[0]
-    n_class = int(data.max()) + 1
-    data_onehot = np.zeros((n_train, n_class))
-    data_onehot[np.arange(n_train), data] = 1
-    return data_onehot
 
 
 def set_seed(seed_value=0):
@@ -28,10 +20,41 @@ def set_seed(seed_value=0):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+def convert_to_onehot(data):
+    if isinstance(data, torch.Tensor):
+        data = data.long()
+        n_train = data.shape[0]
+        n_class = int(data.max()) + 1
+        data_onehot = torch.zeros(n_train, n_class, device=data.device)
+        data_onehot[torch.arange(n_train, device=data.device), data] = 1
+        return data_onehot
+    else:
+        data = data.astype(int)
+        n_train = data.shape[0]
+        n_class = int(data.max()) + 1
+        data_onehot = np.zeros((n_train, n_class))
+        data_onehot[np.arange(n_train), data] = 1
+        return data_onehot
+
+
+def cross_cov(x, y):
+    return 1 / x.shape[0] * x.T @ y
+
+
+
+def get_gamma(x_train):
+    if x_train.shape[0] > 10_000:
+        idx = torch.randperm(x_train.shape[0])[:10_000]
+        x_train = x_train[idx]
+    dist_mat = torch.cdist(x_train, x_train, p=2)
+    row, col = torch.triu_indices(dist_mat.shape[0], dist_mat.shape[1], offset=1)
+    dist_mat = dist_mat[row, col]
+    return 0.5 / dist_mat.median().square()
+
+
+
 class RandomFourierFeatures:
-    def __init__(
-        self, dx, gamma=0.25, drff=1000, use_sine=True, device="cpu", resample=True
-    ):
+    def __init__(self, dx, gamma=0.25, drff=1000, use_sine=True, device='cpu', resample=True):
         gamma = torch.scalar_tensor(gamma)
         self.dx = dx
         self.device = device
@@ -79,120 +102,3 @@ class RandomFourierFeatures:
 
     def __call__(self, x):
         return self.apply_rff(x)
-    
-    
-def get_gamma(x_train):
-    if x_train.shape[0] > 10_000:
-        idx = torch.randperm(x_train.shape[0])[:10_000]
-        x_train = x_train[idx]
-    dist_mat = torch.cdist(x_train, x_train, p=2)
-    row, col = torch.triu_indices(dist_mat.shape[0], dist_mat.shape[1], offset=1)
-    dist_mat = dist_mat[row, col]
-    return 0.5 / dist_mat.median().square()
-
-
-
-
-import torch
-import torch.linalg as LA
-
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def centering_matrix(n):
-    return torch.eye(n, device=DEVICE) - torch.ones(n, n, device=DEVICE) / n
-
-
-def label_kernel(y):
-    y = torch.tensor(y, device=DEVICE)
-    L = (y.unsqueeze(1) == y.unsqueeze(0)).float()
-    L += torch.eye(len(y), device=DEVICE)   # regularisation
-    return L
-
-
-def rbf_kernel(X, gamma=1.0):
-    """X shape: (n, p)"""
-    sq = (X ** 2).sum(dim=1)
-    dist_sq = sq.unsqueeze(1) + sq.unsqueeze(0) - 2 * X @ X.T
-    return torch.exp(-gamma * dist_sq.clamp(min=0))
-
-
-def rbf_kernel_cross(X_train, X_test, gamma=1.0):
-    """Returns shape (m, n)"""
-    sq_tr = (X_train ** 2).sum(dim=1)
-    sq_te = (X_test  ** 2).sum(dim=1)
-    dist_sq = sq_te.unsqueeze(1) + sq_tr.unsqueeze(0) - 2 * X_test @ X_train.T
-    return torch.exp(-gamma * dist_sq.clamp(min=0))
-
-
-def supervised_pca(X_train, L, X_test=None, n_components=2):
-    """
-    X_train : (p, n)
-    L       : (n, n)  — use label_kernel(y) for classification
-    X_test  : (p, m)  — optional
-    returns Z_train (d, n), Z_test (d, m) or None, U (p, d)
-    """
-    X_train = X_train.to(DEVICE).float()
-    # X_train_mean = X_train.mean(dim=0)
-    # X_train = X_train - X_train_mean
-    # if X_test is not None:
-    #     X_test = X_test - X_train_mean
-    L       = L.to(DEVICE).float()
-    p, n    = X_train.shape
-
-    H = centering_matrix(n)
-    Q = X_train @ H @ L @ H @ X_train.T
-    Q = (Q + Q.T) / 2                          # enforce symmetry
-
-    _, U = LA.eigh(Q)                           # ascending order
-    U    = U[:, -n_components:].flip(dims=[1])  # take top-d, descending
-
-    Z_train = U.T @ X_train
-    Z_test  = U.T @ X_test.to(DEVICE).float() if X_test is not None else None
-
-    return Z_train, Z_test, U
-
-
-def kernel_supervised_pca(K_train, L, K_test=None, n_components=2):
-    """
-    K_train : (n, n)  — use rbf_kernel(X_train)
-    L       : (n, n)  — use label_kernel(y)
-    K_test  : (m, n)  — use rbf_kernel_cross(X_train, X_test)
-    returns Z_train (d, n), Z_test (d, m) or None, b (n, d)
-    """
-    K_train = K_train.to(DEVICE).float()
-    L       = L.to(DEVICE).float()
-    n       = K_train.shape[0]
-
-    H = centering_matrix(n)
-    Q = K_train @ H @ L @ H @ K_train
-    Q = (Q + Q.T) / 2
-
-    # Solve generalised eigenproblem Q b = λ K b via whitening
-    K_reg = (K_train + 1e-6 * torch.eye(n, device=DEVICE))
-    D, V  = LA.eigh(K_reg)
-    W     = V * (1.0 / D.sqrt())               # whitening matrix (n, n)
-
-    Q_white        = (W.T @ Q @ W)
-    Q_white        = (Q_white + Q_white.T) / 2
-    _, b_white     = LA.eigh(Q_white)
-    b_white        = b_white[:, -n_components:].flip(dims=[1])
-
-    b = W @ b_white                             # transform back (n, d)
-
-    Z_train = b.T @ K_train
-    Z_test  = b.T @ K_test.to(DEVICE).float().T if K_test is not None else None
-
-    return Z_train, Z_test, b
-
-
-
-
-def make_rff_projector(p, rff_dim=512, gamma=1.0):
-    
-    W = torch.randn(p, rff_dim, device=DEVICE) * (2 * gamma) ** 0.5
-    b = torch.rand(rff_dim, device=DEVICE) * 2 * torch.pi
-    def project(X):
-        X = X.to(DEVICE).float()   # ← this line fixes it
-        return torch.cos(X @ W + b) * (2 / rff_dim) ** 0.5
-    return project

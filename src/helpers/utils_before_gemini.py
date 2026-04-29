@@ -235,57 +235,49 @@ def apply_reparo_steering(
 ):
 
     global PREDICTED_STEER
-    
+
+    device = x.device
+    dtype = x.dtype
+    mean_h = mean_h.to(device=device, dtype=dtype)
+
     if x.shape[1] > 1:
 
-        last_input_tokens = x[:, -1, :].float()
-
+        last_input_tokens = x[:, -1, :]
         dtype = last_input_tokens.dtype
         last_input_tokens = last_input_tokens.to(dtype)
 
         if not no_implicit_model:
-            # print("Computing delta")  
+            print("Computing delta")  
             h_centered = last_input_tokens - mean_h
             h_norm = h_centered / (h_centered.norm(dim=1, keepdim=True) + 1e-8)
 
             with torch.no_grad():
                 z = encoder(h_norm)
-                # print("Current z:", z)
 
             z_threshold = 0.02 * torch.ones_like(z)
             z_target = 0.06 * torch.ones_like(z)
             # import pdb; pdb.set_trace()
             if (z < z_threshold).all():
-                with torch.set_grad_enabled(True):
-                    delta = torch.zeros_like(last_input_tokens, requires_grad=True,dtype=dtype)
-                    optimizer = torch.optim.AdamW([delta], lr=1e-2, weight_decay=1e-3)
-                    for _ in range(100):
+                with torch.enable_grad():
+                    delta = torch.zeros_like(last_input_tokens, requires_grad=True)
+                    optimizer = torch.optim.AdamW([delta], lr=1e-2, weight_decay=0.01)
+                    for _ in range(20):
                         optimizer.zero_grad()
 
                         h_steered = last_input_tokens + delta
                         h_steered = h_steered - mean_h
-                        h_steered = h_steered / (h_steered.norm(dim=1, keepdim=True) + 1e-8)
+                        h_steered = h_steered / (torch.norm(h_steered, dim=1, keepdim=True) + 1e-8)
 
                         z = encoder(h_steered)
-                        with open("reparo_steering_debug_log.txt", "a") as f:
-                            f.write(f"Current z: {z.detach().cpu().numpy()}\n")
-                        # print ("Current z:", z)
-                        if (torch.norm(z- z_target) < 1e-2).all():
-                            # print("Threshold reached, stopping optimization.")
-                            with open("reparo_steering_debug_log.txt", "a") as f:
-                                f.write("Threshold reached, stopping optimization.\n")
-                            break
 
-                        loss = F.mse_loss(z, z_target) 
-                        # + 1e-5 * torch.norm(delta)
+                        loss = F.mse_loss(z, z_target)
                         loss.backward()
                         optimizer.step()
-                        # import pdb; pdb.set_trace()
-                    
+
                     PREDICTED_STEER = delta.detach()
             else:
                 PREDICTED_STEER = torch.zeros_like(last_input_tokens)
-        # print("Applying delta")
+        print("Applying delta")
         vector = PREDICTED_STEER
 
         if only_generated_tokens:

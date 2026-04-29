@@ -345,6 +345,50 @@ def get_arguments():
         action="store_true",
         help="The input specific shift (P2S). When this argument is given, the given shift vector should be a list of vectors! each vector being a sample specific shift!",
     )
+    parser.add_argument(
+        "--reparo_encoder_path",
+        type=str,
+        default=None,
+        help="Path to Reparo encoder checkpoint (.pt/.pth).",
+    )
+    parser.add_argument(
+        "--reparo_score_scale",
+        type=float,
+        default=1.0,
+        help="Scale factor applied to Reparo score before using it to modulate shift.",
+    )
+    parser.add_argument(
+        "--reparo_score_bias",
+        type=float,
+        default=0.0,
+        help="Additive bias applied to Reparo score after scaling.",
+    )
+    parser.add_argument(
+        "--reparo_score_reduction",
+        type=str,
+        default="mean",
+        choices=["mean", "l2", "first"],
+        help="How to reduce encoder output z to a scalar score when it has more than one dimension.",
+    )
+    parser.add_argument(
+        "--reparo_score_activation",
+        type=str,
+        default="identity",
+        choices=["identity", "sigmoid", "tanh", "relu"],
+        help="Activation applied to the reduced Reparo score.",
+    )
+    parser.add_argument(
+        "--reparo_score_min",
+        type=float,
+        default=None,
+        help="Optional lower clamp for Reparo score after activation.",
+    )
+    parser.add_argument(
+        "--reparo_score_max",
+        type=float,
+        default=None,
+        help="Optional upper clamp for Reparo score after activation.",
+    )
 
     parser.add_argument(
         "--force_answer",

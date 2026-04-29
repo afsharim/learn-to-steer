@@ -2,7 +2,7 @@ model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
 
-YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/train
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/val
 YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
@@ -11,7 +11,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 
 save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
-dataset_name=pope_val
+dataset_name=pope_train
 dataset_size=-1
 
 max_new_tokens=100
@@ -26,10 +26,10 @@ for split in all; do
     for i in 14; do
 
         modules_to_hook="language_model.model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_val_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_val_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -57,10 +57,10 @@ for split in all; do
     for i in 14; do
 
         modules_to_hook="language_model.model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_val_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_val_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -96,7 +96,7 @@ model=qwen2vlinstruct
 cache_dir=/research/hal-afsharim/cache
 
 
-YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/train
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/val
 YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
@@ -105,7 +105,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 
 save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
-dataset_name=pope_val
+dataset_name=pope_train
 dataset_size=-1
 
 max_new_tokens=100
@@ -120,10 +120,10 @@ for split in all; do
     for i in 17; do
 
         modules_to_hook="model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_all_val_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_val_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
@@ -152,10 +152,10 @@ for split in all; do
     for i in 17; do
 
         modules_to_hook="model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_all_val_${dataset_size}"
+        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_val_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
