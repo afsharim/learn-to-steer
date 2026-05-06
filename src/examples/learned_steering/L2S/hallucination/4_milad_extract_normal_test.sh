@@ -17,7 +17,7 @@ dataset_name=pope_test
 dataset_size=-1
 max_new_tokens=100
 steering_alpha=1
-hook_names=("save_hidden_states") # should add the evaluation right here
+hook_names=("save_hidden_states_for_l2s") # should add the evaluation right here
 
 
 
@@ -84,7 +84,7 @@ dataset_name=pope_test
 dataset_size=-1
 max_new_tokens=100
 steering_alpha=1
-hook_names=("save_hidden_states") # should add the evaluation right here
+hook_names=("save_hidden_states_for_l2s") # should add the evaluation right here
 
 
 

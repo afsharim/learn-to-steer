@@ -227,6 +227,9 @@ def apply_reparo_steering(
     x: torch.Tensor,
     encoder: Any,
     mean_h: torch.Tensor,
+    debug_log_path: str = None,
+    z_threshold_value: float = -0.05,
+    z_target_value: float = -0.06,
     alpha: float = 1,
     only_generated_tokens: bool = False,
     include_last_prompt_token: bool = False,
@@ -238,7 +241,7 @@ def apply_reparo_steering(
     
     if x.shape[1] > 1:
 
-        last_input_tokens = x[:, -1, :].float()
+        last_input_tokens = x[:, -1, :].detach().float()
 
         dtype = last_input_tokens.dtype
         last_input_tokens = last_input_tokens.to(dtype)
@@ -252,14 +255,14 @@ def apply_reparo_steering(
                 z = encoder(h_norm)
                 # print("Current z:", z)
 
-            z_threshold = 0.02 * torch.ones_like(z)
-            z_target = 0.06 * torch.ones_like(z)
+            z_threshold = z_threshold_value * torch.ones_like(z)
+            z_target = z_target_value * torch.ones_like(z)
             # import pdb; pdb.set_trace()
-            if (z < z_threshold).all():
+            if (z > z_threshold).all():
                 with torch.set_grad_enabled(True):
                     delta = torch.zeros_like(last_input_tokens, requires_grad=True,dtype=dtype)
-                    optimizer = torch.optim.AdamW([delta], lr=1e-2, weight_decay=1e-3)
-                    for _ in range(100):
+                    optimizer = torch.optim.Adam([delta], lr=5e-3, weight_decay=1e-2)
+                    for _ in range(50):
                         optimizer.zero_grad()
 
                         h_steered = last_input_tokens + delta
@@ -267,16 +270,21 @@ def apply_reparo_steering(
                         h_steered = h_steered / (h_steered.norm(dim=1, keepdim=True) + 1e-8)
 
                         z = encoder(h_steered)
-                        with open("reparo_steering_debug_log.txt", "a") as f:
-                            f.write(f"Current z: {z.detach().cpu().numpy()}\n")
+                        if debug_log_path is not None:
+                            with open(debug_log_path, "a") as f:
+                                f.write(
+                                    f"Current z: {z.detach().cpu().numpy()}, norm delta: {torch.norm(delta).detach().cpu().numpy()}\n"
+                                )
+                                # f.write(f"norm delta: {torch.norm(delta).detach().cpu().numpy()}")
                         # print ("Current z:", z)
-                        if (torch.norm(z- z_target) < 1e-2).all():
+                        if (z < z_threshold).all():
                             # print("Threshold reached, stopping optimization.")
-                            with open("reparo_steering_debug_log.txt", "a") as f:
-                                f.write("Threshold reached, stopping optimization.\n")
+                            if debug_log_path is not None:
+                                with open(debug_log_path, "a") as f:
+                                    f.write("Threshold reached, stopping optimization.\n")
                             break
 
-                        loss = F.mse_loss(z, z_target) 
+                        loss = F.mse_loss(z, z_target)
                         # + 1e-5 * torch.norm(delta)
                         loss.backward()
                         optimizer.step()
@@ -520,6 +528,9 @@ def shift_hidden_states(
                     output[0],
                     encoder=vector["encoder"],
                     mean_h=vector["mean_h"],
+                    debug_log_path=vector.get("debug_log_path"),
+                    z_threshold_value=vector.get("z_threshold_value", -0.05),
+                    z_target_value=vector.get("z_target_value", -0.06),
                     alpha=alpha,
                     include_last_prompt_token=include_last_prompt_token,
                     start_prompt_token_idx=start_prompt_token_idx,
@@ -531,6 +542,9 @@ def shift_hidden_states(
                     output,
                     encoder=vector["encoder"],
                     mean_h=vector["mean_h"],
+                    debug_log_path=vector.get("debug_log_path"),
+                    z_threshold_value=vector.get("z_threshold_value", -0.05),
+                    z_target_value=vector.get("z_target_value", -0.06),
                     alpha=alpha,
                     include_last_prompt_token=include_last_prompt_token,
                     start_prompt_token_idx=start_prompt_token_idx,
@@ -993,13 +1007,27 @@ def register_hooks(
             def encoder(h):
                 return encode_kernel(h, x_train_normalized, K_train, H_train,alpha_normalized, gamma)
 
+            save_filename = getattr(args, "save_filename", None) or f"pid_{os.getpid()}"
+            save_filename = re.sub(r"[^a-zA-Z0-9._-]+", "_", str(save_filename))
+            debug_log_dir = os.getenv("REPARO_DEBUG_LOG_DIR")
+            if not debug_log_dir:
+                debug_log_dir = os.path.join(getattr(args, "save_dir", "."), "logs")
+            os.makedirs(debug_log_dir, exist_ok=True)
+            debug_log_path = os.getenv(
+                "REPARO_DEBUG_LOG_PATH",
+                os.path.join(debug_log_dir, f"reparo_steering_debug_{save_filename}.txt"),
+            )
+
             vector = {
                 "encoder": encoder,
                 "mean_h": mean_h,
                 "H_train": H_train,
                 "K_train": K_train,
                 "alpha_normalized": alpha_normalized,
-                "gamma": gamma
+                "gamma": gamma,
+                "debug_log_path": debug_log_path,
+                "z_threshold_value": getattr(args, "reparo_z_threshold", -0.05),
+                "z_target_value": getattr(args, "reparo_z_target", -0.06),
             }
         
         else:
@@ -1128,6 +1156,3 @@ def setup_hooks(
         hook_postprocessing_functions.append(hook_postprocessing_function)
 
     return hook_return_functions, hook_postprocessing_functions
-
-
-

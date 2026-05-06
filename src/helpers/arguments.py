@@ -389,6 +389,18 @@ def get_arguments():
         default=None,
         help="Optional upper clamp for Reparo score after activation.",
     )
+    parser.add_argument(
+        "--reparo_z_threshold",
+        type=float,
+        default=-0.05,
+        help="Threshold used in Reparo optimization stop/trigger condition.",
+    )
+    parser.add_argument(
+        "--reparo_z_target",
+        type=float,
+        default=-0.06,
+        help="Target z value used by Reparo optimization loss.",
+    )
 
     parser.add_argument(
         "--force_answer",
