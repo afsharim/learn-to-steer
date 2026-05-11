@@ -340,6 +340,12 @@ def get_arguments():
         help="The size of the learned steering mode that is to be loaded.",
     )
     parser.add_argument(
+        "--val_features_path",
+        nargs="+",
+        help="Paths to val features for pope pre-split val: pos, neg, cxt (same order as --features_path).",
+        default=None,
+    )
+    parser.add_argument(
         "--individual_shift",
         default=False,
         action="store_true",

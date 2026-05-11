@@ -169,7 +169,6 @@ def apply_steering_vector(
             vector = vector[SAMPLE_COUNTER-1]
     x = x + alpha * vector.to(x.device).to(x.dtype)
     # import ipdb; ipdb.set_trace()
-    
     return x
 
 

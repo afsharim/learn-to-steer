@@ -14,6 +14,9 @@ dataset_size=-1
 
 # features_dir=/data/khayatan/Hallucination/POPE/hallucination/features
 features_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/features
+val_features_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/features
+
+
 
 shift_type=average
 # save_dir=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors
@@ -29,12 +32,15 @@ for split in all; do
         pos_features_name=save_hidden_states_for_l2s_${model}_pope_train_features_pos_answers_14_${split}_all_train_${dataset_size}.pth
         neg_features_name=save_hidden_states_for_l2s_${model}_pope_train_features_neg_answers_14_${split}_all_train_${dataset_size}.pth
 
+        val_pos_name=save_hidden_states_for_l2s_${model}_pope_train_features_pos_answers_14_${split}_val_${dataset_size}.pth
+        val_neg_name=save_hidden_states_for_l2s_${model}_pope_train_features_neg_answers_14_${split}_val_${dataset_size}.pth
+
         modules_to_hook="language_model.model.layers.${i};language_model.model.layers.${i}"
 
         save_filename=${split}_pope_train_-1
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=7 python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --analysis_name $analysis_name \
@@ -42,6 +48,7 @@ for split in all; do
             --save_filename ${save_filename} \
             --shift_type $shift_type \
             --features_path ${features_dir}/${pos_features_name} ${features_dir}/${neg_features_name} \
+            --val_features_path ${val_features_dir}/${val_pos_name} ${val_features_dir}/${val_neg_name} \
             --seed 0
     done
 done
@@ -78,6 +85,9 @@ dataset_size=-1
 
 # features_dir=/data/khayatan/Hallucination/POPE/hallucination/features
 features_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/features
+val_features_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/features
+
+
 
 shift_type=average
 # save_dir=/data/khayatan/Hallucination/POPE/hallucination/shift_vectors
@@ -92,12 +102,16 @@ for split in all; do
         pos_features_name=save_hidden_states_for_l2s_${model}_pope_train_features_pos_answers_${i}_${split}_all_train_${dataset_size}.pth
         neg_features_name=save_hidden_states_for_l2s_${model}_pope_train_features_neg_answers_${i}_${split}_all_train_${dataset_size}.pth
 
+        val_pos_name=save_hidden_states_for_l2s_${model}_pope_train_features_pos_answers_${i}_${split}_val_${dataset_size}.pth
+        val_neg_name=save_hidden_states_for_l2s_${model}_pope_train_features_neg_answers_${i}_${split}_val_${dataset_size}.pth
+
+
         modules_to_hook="model.layers.${i};model.layers.${i}"
 
         save_filename=${split}_pope_train_-1
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=5 python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \
@@ -106,6 +120,7 @@ for split in all; do
             --save_filename ${save_filename} \
             --shift_type $shift_type \
             --features_path ${features_dir}/${pos_features_name} ${features_dir}/${neg_features_name} \
+            --val_features_path ${val_features_dir}/${val_pos_name} ${val_features_dir}/${val_neg_name} \
             --seed 0 \
             --hidden_size 400
     done

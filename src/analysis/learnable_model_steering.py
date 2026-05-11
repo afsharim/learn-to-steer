@@ -42,7 +42,7 @@ class SteeringNet(nn.Module):
 
 
 class SteeringDataset(Dataset):
-    def __init__(self, inputs, targets, dataset_name="pope", responses=None):
+    def __init__(self, inputs, targets, dataset_name="pope", responses=None, val_loader=None):
         assert len(inputs) == len(targets), "Inputs and targets must be the same length"
         self.inputs = [torch.tensor(inp, dtype=torch.float32).squeeze(0) for inp in inputs]
         self.targets = [torch.tensor(tgt, dtype=torch.float32).squeeze(0) for tgt in targets]
@@ -51,7 +51,7 @@ class SteeringDataset(Dataset):
             self.responses = ["yes" for _ in range(len(self.targets))]
         
         self.dataset_name = dataset_name  # Store dataset name for splitting logic
-        self._prepare_dataloaders()       # Automatically prepare loaders after initialization
+        self._prepare_dataloaders(val_loader)       # Automatically prepare loaders after initialization
 
     def __len__(self):
         return len(self.inputs)
@@ -62,16 +62,13 @@ class SteeringDataset(Dataset):
     def get_train_shifts(self):
         return np.array([self.targets[i] for i in self.train_indices])
 
-    def _prepare_dataloaders(self):
+    def _prepare_dataloaders(self, val_loader):
         total_size = len(self)
 
         if "pope" in self.dataset_name:
-            train_ratio, seed = 1100 / 1200, 2
-            train_size = int(total_size * train_ratio)
-            indices = list(range(total_size))
-            np.random.seed(seed) # the indices are already shuffled in pope_train (the results might be a bit different in this implementation, since in the original one we apply shuffling after extracting validation indices, to make sure to have same proportion of + and - in both train and validation.)
-            self.train_indices = indices[:train_size]
-            self.val_indices = indices[train_size:]
+            # All data is used for training; val comes from a separate pre-split path
+            self.train_indices = list(range(total_size))
+            self.val_loader = val_loader
         elif "mmsb" in self.dataset_name:
             train_ratio, seed = 0.8, 0 # split generated from (seed=21) used in main mmsb experiments since the very first experiment
             all_idx = np.arange(total_size)
@@ -80,14 +77,12 @@ class SteeringDataset(Dataset):
             np.random.shuffle(all_idx)
             self.train_indices = all_idx[:n_train]
             self.val_indices = all_idx[n_train:]
+            self.val_loader = DataLoader(Subset(self, self.val_indices), batch_size=64, shuffle=False)
         else:
             raise NotImplementedError(f"Dataset split not implemented for: {self.dataset_name}")
 
         self.train_dataset = Subset(self, self.train_indices)
-        self.val_dataset = Subset(self, self.val_indices)
-
         self.train_loader = DataLoader(self.train_dataset, batch_size=64, shuffle=True)
-        self.val_loader = DataLoader(self.val_dataset, batch_size=64, shuffle=False)
 
 class LearnableSteering:
     def __init__(
@@ -101,6 +96,9 @@ class LearnableSteering:
         model_name: str,
         input_module: str = None,
         cxt_path: str = None,
+        val_pos_path: str = None,
+        val_neg_path: str = None,
+        val_cxt_path: str = None,
         model_class: Any = None,
         logger: Callable = None,
         args: argparse.Namespace = None,
@@ -108,6 +106,9 @@ class LearnableSteering:
         self.pos_path = pos_path
         self.neg_path = neg_path
         self.cxt_path = cxt_path
+        self.val_pos_path = val_pos_path
+        self.val_neg_path = val_neg_path
+        self.val_cxt_path = val_cxt_path
         self.module = module
         self.input_module = input_module
         self.shift_type = shift_type
@@ -191,19 +192,34 @@ class LearnableSteering:
                 input_inf["hidden_states"][i][self.input_module]["inputs"]["last_raw_input"]
                 for i in range(len(input_inf["hidden_states"]))
             ]
-
             responses = [
                 input_inf["response"][i][0]
                 for i in range(len(input_inf["response"]))
             ]
+            # Compute val contrastive vectors on the fly from val pos/neg
+            val_pos_inf = torch.load(self.val_pos_path, map_location="cpu")
+            val_neg_inf = torch.load(self.val_neg_path, map_location="cpu")
+            val_n = len(val_pos_inf["hidden_states"])
+            val_output = torch.stack([
+                val_pos_inf["hidden_states"][i][self.module]["outputs"][self.shift_type].float() -
+                val_neg_inf["hidden_states"][i][self.module]["outputs"][self.shift_type].float()
+                for i in range(val_n)
+            ])
+            val_inf = torch.load(self.val_cxt_path, map_location="cpu")
+            val_inputs = [val_inf["hidden_states"][i][self.input_module]["inputs"]["last_raw_input"] for i in range(val_n)]
+            val_responses = [val_inf["response"][i][0] for i in range(val_n)]
+            val_inputs_t = [torch.tensor(x, dtype=torch.float32).squeeze(0) for x in val_inputs]
+            val_targets_t = [val_output[i] for i in range(val_n)]
+            assert len(val_inputs_t) == len(val_targets_t), "Inputs and targets must be the same length"
+            val_loader = DataLoader(list(zip(val_inputs_t, val_targets_t, val_responses)), batch_size=64, shuffle=False)
         elif "mmsb" in dataset_name:
             input_data = [
                 input_inf["hidden_states"][i][self.input_module]["outputs"]["last_input"]
                 for i in range(len(input_inf["hidden_states"]))
             ]
-            
             responses = None
-        steering_dataset = SteeringDataset(input_data, output_data, dataset_name=dataset_name, responses=responses)
+            val_loader = None
+        steering_dataset = SteeringDataset(input_data, output_data, dataset_name=dataset_name, responses=responses, val_loader=val_loader)
 
         
         input_size, output_size, hidden_size = self.model_class.get_hidden_size(), self.model_class.get_hidden_size(), self.hidden_size

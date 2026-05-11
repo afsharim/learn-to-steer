@@ -17,42 +17,46 @@ save_dir=${YOUR_SAVE_DIR}
 dataset_name=pope_test
 dataset_size=-1
 max_new_tokens=100
-steering_alpha=5
-reparo_z_threshold=-0.043
-reparo_z_target=-0.05
+steering_alpha_list=(1 2 3 4 5 6 7 8)
+reparo_z_threshold_list=(-0.08 -0.06 -0.043 -0.03 -0.027 -0.015)
+reparo_z_target_list=(-0.1 -0.08 -0.06 -0.05 -0.03 -0.03)
 hook_names=("reparo" "hallucination_metrics") # should add the evaluation right here
 
 steering_method="reparo"
 
-for split in adversarial popular random; do
 
+for steering_alpha in "${steering_alpha_list[@]}"; do
+    for idx in "${!reparo_z_threshold_list[@]}"; do
+        reparo_z_threshold=${reparo_z_threshold_list[$idx]}
+        reparo_z_target=${reparo_z_target_list[$idx]}
+        for split in adversarial popular random; do
+            for i in 14; do
+                shift_vector_path=${STEER_MODEL_NAME}
+                save_filename="${model}_${dataset_name}_reparo_${i}_yes_no_${split}_${steering_alpha}_${reparo_z_threshold}_${reparo_z_target}_${steer_model_base}"
+                modules_to_hook="language_model.model.layers.${i}"
 
-    for i in 14; do
-        shift_vector_path=${STEER_MODEL_NAME}
-        save_filename="${model}_${dataset_name}_reparo_${i}_yes_no_${split}_${steering_alpha}_${reparo_z_threshold}_${reparo_z_target}_${steer_model_base}"
-        modules_to_hook="language_model.model.layers.${i}"
-
-
-        CUDA_VISIBLE_DEVICES=7 python src/save_features.py \
-            --model_name_or_path $model_name_or_path \
-            --save_dir $save_dir \
-            --data_dir $data_dir \
-            --split $split \
-            --dataset_size $dataset_size \
-            --dataset_name $dataset_name \
-            --hook_names "${hook_names[@]}" \
-            --modules_to_hook $modules_to_hook \
-            --generation_mode \
-            --save_filename $save_filename \
-            --save_predictions \
-            --exact_match_modules_to_hook \
-            --shift_vector_path $shift_vector_path \
-            --steering_alpha $steering_alpha \
-            --reparo_z_threshold $reparo_z_threshold \
-            --reparo_z_target $reparo_z_target \
-            --individual_shift \
-            --max_new_tokens $max_new_tokens \
-            --seed 0
+                CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
+                    --model_name_or_path $model_name_or_path \
+                    --save_dir $save_dir \
+                    --data_dir $data_dir \
+                    --split $split \
+                    --dataset_size $dataset_size \
+                    --dataset_name $dataset_name \
+                    --hook_names "${hook_names[@]}" \
+                    --modules_to_hook $modules_to_hook \
+                    --generation_mode \
+                    --save_filename $save_filename \
+                    --save_predictions \
+                    --exact_match_modules_to_hook \
+                    --shift_vector_path $shift_vector_path \
+                    --steering_alpha $steering_alpha \
+                    --reparo_z_threshold $reparo_z_threshold \
+                    --reparo_z_target $reparo_z_target \
+                    --individual_shift \
+                    --max_new_tokens $max_new_tokens \
+                    --seed 0
+            done
+        done
     done
 done
 

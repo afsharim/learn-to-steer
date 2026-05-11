@@ -196,10 +196,20 @@ def analyse_features(
 
         model_name_str = model_name(args.model_name_or_path)
 
+        val_pos_path, val_neg_path, val_cxt_path = None, None, None
+        if args.val_features_path is not None:
+            val_pos_path = [p for p in args.val_features_path if "pos" in p][0]
+            val_neg_path = [p for p in args.val_features_path if "neg" in p][0]
+            val_cxt = [p for p in args.val_features_path if ("pos" not in p) and ("neg" not in p)]
+            val_cxt_path = val_cxt[0] if val_cxt else args.val_features_path[-1]
+
         learnable_steering = LearnableSteering(
             pos_path=pos_path,
             neg_path=neg_path,
             cxt_path=cxt_path,
+            val_pos_path=val_pos_path,
+            val_neg_path=val_neg_path,
+            val_cxt_path=val_cxt_path,
             module=args.modules_to_hook[0][0],
             input_module=args.modules_to_hook[1][0],
             shift_type=args.shift_type,
