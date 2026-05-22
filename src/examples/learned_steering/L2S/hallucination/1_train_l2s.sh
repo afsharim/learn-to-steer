@@ -40,7 +40,7 @@ for split in all; do
         save_filename=${split}_pope_train_-1
 
 
-        CUDA_VISIBLE_DEVICES=7 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=3 python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --analysis_name $analysis_name \
@@ -111,7 +111,7 @@ for split in all; do
         save_filename=${split}_pope_train_-1
 
 
-        CUDA_VISIBLE_DEVICES=5 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=3 python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \

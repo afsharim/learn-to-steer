@@ -68,6 +68,7 @@ for split in multi; do
             --save_filename ${save_neg_filename} \
             --force_answer \
             --exact_match_modules_to_hook \
+            --seed 0 \
             --end_special_tokens "</s>"
     done
 

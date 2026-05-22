@@ -407,6 +407,18 @@ def get_arguments():
         default=-0.06,
         help="Target z value used by Reparo optimization loss.",
     )
+    parser.add_argument(
+        "--reparo_lr",
+        type=float,
+        default=5e-2,
+        help="Learning rate for the Reparo AdamW optimizer.",
+    )
+    parser.add_argument(
+        "--reparo_weight_decay",
+        type=float,
+        default=1e-2,
+        help="Weight decay for the Reparo AdamW optimizer.",
+    )
 
     parser.add_argument(
         "--force_answer",
@@ -427,6 +439,13 @@ def get_arguments():
         action="store_true",
         default=False,
         help="Whether the instruction should ask for more than just yes/no answer.",
+    )
+
+    parser.add_argument(
+        "--model_response",
+        action="store_true",
+        default=False,
+        help="Append the reformulated question suffix but let the model generate freely (no forced completion).",
     )
 
 

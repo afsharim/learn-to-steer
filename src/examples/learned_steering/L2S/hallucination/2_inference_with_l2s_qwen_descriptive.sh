@@ -94,7 +94,7 @@ hook_names=("shift_hidden_states_learned_steer" "hallucination_metrics") # shoul
 
 
 
-for split in adversarial popular random; do
+for split in descriptive; do
 
 
 
@@ -105,7 +105,7 @@ for split in adversarial popular random; do
         modules_to_hook="model.layers.${i}"
 
 
-        CUDA_VISIBLE_DEVICES=2 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=4 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \
@@ -124,7 +124,8 @@ for split in adversarial popular random; do
             --individual_shift \
             --max_new_tokens $max_new_tokens \
             --seed 0 \
-            --hidden_size 400
+            --hidden_size 400\
+            --descriptive_answer
     done
 done
 

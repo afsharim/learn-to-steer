@@ -37,7 +37,7 @@ def find_assistant_caption(a, model):
 
 def response_in_caption_start(responses, captions):
     return [
-        response.lower() in caption[:15].lower()
+        response.lower() in caption[:20].lower()
         for response, caption in zip(responses, captions)
     ]
 

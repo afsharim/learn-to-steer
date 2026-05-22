@@ -39,7 +39,7 @@ for split in multi; do
         # Second command computes negative answer representations
         # Third command computes input context representations
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -55,7 +55,7 @@ for split in multi; do
             --exact_match_modules_to_hook \
             --end_special_tokens "</s>"
         
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \
@@ -78,7 +78,7 @@ for split in multi; do
         modules_to_hook="model.layers.${i}" # For Qwen
         save_cxt_filename="${model}_${dataset_name}_features_context_${i}_${split}_all_${dataset_size}"
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --data_dir $data_dir \
             --dataset_name $dataset_name \

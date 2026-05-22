@@ -79,7 +79,7 @@ cache_dir=/research/hal-afsharim/cache/
 
 
 # YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
-YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/descriptive_test
 # YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
 YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 # STEER_MODEL_NAME=/home/khayatan/learnable_steering/xl-vlms/qwen2vlinstruct_17_average_all_pope_train_-1.pt
@@ -100,11 +100,11 @@ max_new_tokens=100
 # reparo_z_threshold_list=(-0.023 -0.01 -0.007 )
 # reparo_z_target_list=(-0.033 -0.03 -0.023)
 # reparo_lr_list=(1e-1 5e-2 1e-2 5e-3 1e-3)
-steering_alpha_list=(10)
-reparo_z_threshold_list=(-0.01)
-reparo_z_target_list=(-0.03)
-reparo_lr_list=(5e-3)
-reparo_weight_decay_list=(0 1e-4 1e-3)
+steering_alpha_list=(10 5)
+reparo_z_threshold_list=(-0.01 0)
+reparo_z_target_list=(-0.03  -0.01)
+reparo_lr_list=(5e-3 1e-3)
+reparo_weight_decay_list=(1e-2 1e-4)
 hook_names=("reparo" "hallucination_metrics") # should add the evaluation right here
 
 steering_method="reparo"
@@ -141,7 +141,7 @@ for steering_alpha in "${steering_alpha_list[@]}"; do
         reparo_z_target=${reparo_z_target_list[$idx]}
         for reparo_lr in "${reparo_lr_list[@]}"; do
         for reparo_weight_decay in "${reparo_weight_decay_list[@]}"; do
-            for split in adversarial popular random; do
+            for split in descriptive; do
                 for i in 17; do
                     shift_vector_path=${STEER_MODEL_NAME}
                     save_filename="${model}_${dataset_name}_reparo_${i}_yes_no_${split}_${steering_alpha}_${reparo_z_threshold}_${reparo_z_target}_lr${reparo_lr}_weight_decay${reparo_weight_decay}_${steer_model_base}"
@@ -172,7 +172,8 @@ for steering_alpha in "${steering_alpha_list[@]}"; do
                     --reparo_weight_decay $reparo_weight_decay \
                     --individual_shift \
                     --max_new_tokens $max_new_tokens \
-                    --seed 0 &
+                    --seed 0 \
+                    --descriptive_answer &
                 # Give the new process time to claim memory so the next
                 # iteration's free-memory check sees it as occupied.
                 sleep 30

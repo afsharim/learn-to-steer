@@ -231,6 +231,8 @@ def apply_reparo_steering(
     debug_log_path: str = None,
     z_threshold_value: float = -0.05,
     z_target_value: float = -0.06,
+    lr: float = 5e-2,
+    weight_decay: float = 1e-2,
     alpha: float = 1,
     only_generated_tokens: bool = False,
     include_last_prompt_token: bool = False,
@@ -262,7 +264,7 @@ def apply_reparo_steering(
             if (z > z_threshold).all():
                 with torch.set_grad_enabled(True):
                     delta = torch.zeros_like(last_input_tokens, requires_grad=True,dtype=dtype)
-                    optimizer = torch.optim.Adam([delta], lr=5e-3, weight_decay=1e-2)
+                    optimizer = torch.optim.AdamW([delta], lr=lr, weight_decay=weight_decay)
                     for _ in range(50):
                         optimizer.zero_grad()
 
@@ -532,6 +534,8 @@ def shift_hidden_states(
                     debug_log_path=vector.get("debug_log_path"),
                     z_threshold_value=vector.get("z_threshold_value", -0.05),
                     z_target_value=vector.get("z_target_value", -0.06),
+                    lr=vector.get("lr", 5e-2),
+                    weight_decay=vector.get("weight_decay", 1e-2),
                     alpha=alpha,
                     include_last_prompt_token=include_last_prompt_token,
                     start_prompt_token_idx=start_prompt_token_idx,
@@ -546,6 +550,8 @@ def shift_hidden_states(
                     debug_log_path=vector.get("debug_log_path"),
                     z_threshold_value=vector.get("z_threshold_value", -0.05),
                     z_target_value=vector.get("z_target_value", -0.06),
+                    lr=vector.get("lr", 5e-2),
+                    weight_decay=vector.get("weight_decay", 1e-2),
                     alpha=alpha,
                     include_last_prompt_token=include_last_prompt_token,
                     start_prompt_token_idx=start_prompt_token_idx,
@@ -1029,6 +1035,8 @@ def register_hooks(
                 "debug_log_path": debug_log_path,
                 "z_threshold_value": getattr(args, "reparo_z_threshold", -0.05),
                 "z_target_value": getattr(args, "reparo_z_target", -0.06),
+                "lr": getattr(args, "reparo_lr", 5e-2),
+                "weight_decay": getattr(args, "reparo_weight_decay", 1e-2),
             }
         
         else:

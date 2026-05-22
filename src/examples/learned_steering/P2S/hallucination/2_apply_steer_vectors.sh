@@ -14,11 +14,31 @@ save_dir=${YOUR_SAVE_DIR}
 
 dataset_name=pope_test
 dataset_size=-1
-max_new_tokens=128
+max_new_tokens=100
 steering_alpha=1
 hook_names=("shift_hidden_states_add" "hallucination_metrics")
 shift_vector_key=steering_vector
 
+
+# Define once at the top of the script
+select_gpu() {
+    local required_free=${1:-37}
+    while true; do
+        while IFS=',' read -r idx free total; do
+            free_pct=$((free * 100 / total))
+            if [ "$free_pct" -ge "$required_free" ]; then
+                echo "$idx"
+                return 0
+            fi
+        done < <(nvidia-smi --query-gpu=index,memory.free,memory.total --format=csv,noheader,nounits)
+        echo "No GPU with >= ${required_free}% free. Retrying in 30s..." >&2
+        sleep 30
+    done
+}
+
+
+GPU_ID=$(select_gpu 32)
+echo "Selected GPU $GPU_ID"
 
 for subset in adversarial popular random; do
 
@@ -30,7 +50,7 @@ for subset in adversarial popular random; do
             modules_to_hook="language_model.model.layers.${i}"
 
 
-            CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+            CUDA_VISIBLE_DEVICES=$GPU_ID python src/save_features.py \
                 --model_name_or_path $model_name_or_path \
                 --save_dir $save_dir \
                 --data_dir $data_dir \
@@ -88,11 +108,13 @@ save_dir=${YOUR_SAVE_DIR}
 
 dataset_name=pope_test
 dataset_size=-1
-max_new_tokens=128
+max_new_tokens=100
 steering_alpha=1
 hook_names=("shift_hidden_states_add" "hallucination_metrics")
 shift_vector_key=steering_vector
 
+GPU_ID=$(select_gpu 37)
+echo "Selected GPU $GPU_ID"
 
 for subset in adversarial popular random; do
 
@@ -104,7 +126,7 @@ for subset in adversarial popular random; do
             modules_to_hook="model.layers.${i}"
 
 
-            CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+            CUDA_VISIBLE_DEVICES=$GPU_ID python src/save_features.py \
                 --model_name_or_path $model_name_or_path \
                 --cache_dir $cache_dir \
                 --save_dir $save_dir \

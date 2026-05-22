@@ -32,7 +32,7 @@ for split in adversarial popular random; do
         modules_to_hook="language_model.model.layers.${i}"
 
 
-        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --data_dir $data_dir \
@@ -51,7 +51,7 @@ for split in adversarial popular random; do
             --max_new_tokens $max_new_tokens \
             --seed 0
     done
-done
+done &
 
 
 
@@ -88,7 +88,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 dataset_name=pope_test
 dataset_size=-1
-max_new_tokens=128
+max_new_tokens=100
 steering_alpha=1
 hook_names=("shift_hidden_states_add" "hallucination_metrics") # should add the evaluation right here
 
@@ -103,7 +103,7 @@ for split in adversarial popular random; do
         modules_to_hook="model.layers.${i}"
 
 
-        CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=2 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \
@@ -123,7 +123,8 @@ for split in adversarial popular random; do
             --max_new_tokens $max_new_tokens \
             --seed 0
     done
-done
+done &
+wait
 
 
 

@@ -2,7 +2,7 @@ model_name_or_path=llava-hf/llava-1.5-7b-hf
 model=llava
 
 # YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test
-YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/descriptive_test
 # YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination
 YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 # STEER_MODEL_NAME=/home/khayatan/learnable_steering/xl-vlms/llava_14_average_all_pope_train_-1.pt
@@ -16,19 +16,21 @@ save_dir=${YOUR_SAVE_DIR}
 
 dataset_name=pope_test
 dataset_size=-1
-max_new_tokens=100
-steering_alpha_list=(4)
-reparo_z_threshold_list=(-0.04)
-reparo_z_target_list=(-0.05)
-reparo_lr_list=(1e-2)
-reparo_weight_decay_list=(1e-4)
-layer_list=(14)
-hook_names=("reparo" "hallucination_metrics")
+max_new_tokens=512
+steering_alpha_list=(1 4)
+# reparo_z_threshold_list=(-0.015 -0.04 0 -0.01 -0.02)
+# reparo_z_target_list=(-0.045 -0.05 -0.01 -0.02 -0.03)
+reparo_z_threshold_list=(0)
+reparo_z_target_list=(-0.01)
+reparo_lr_list=(5e-2)
+reparo_weight_decay_list=(0 1e-4)
+hook_names=("reparo" "hallucination_metrics") # should add the evaluation right here
 
 steering_method="reparo"
 
 NUM_GPUS=4
-FREE_MEM_THRESHOLD=0.31   # require at least 36% of memory.total free
+FREE_MEM_THRESHOLD=0.31       # require free/total >= 0.8 on a GPU before using it
+POST_LAUNCH_SLEEP=20         # seconds to let a freshly launched job claim VRAM before next probe
 
 # Find the first GPU (0..NUM_GPUS-1) with free/total >= FREE_MEM_THRESHOLD.
 # Prints the GPU index, or nothing if none qualify.
@@ -58,51 +60,53 @@ for steering_alpha in "${steering_alpha_list[@]}"; do
         reparo_z_threshold=${reparo_z_threshold_list[$idx]}
         reparo_z_target=${reparo_z_target_list[$idx]}
         for reparo_lr in "${reparo_lr_list[@]}"; do
-        for reparo_weight_decay in "${reparo_weight_decay_list[@]}"; do
-            for split in adversarial popular random; do
-                for i in "${layer_list[@]}"; do
-                    shift_vector_path=${STEER_MODEL_NAME}
-                    save_filename="${model}_${dataset_name}_reparo_${i}_yes_no_${split}_${steering_alpha}_${reparo_z_threshold}_${reparo_z_target}_lr${reparo_lr}_weight_decay${reparo_weight_decay}_${steer_model_base}"
-                    modules_to_hook="language_model.model.layers.${i}"
+            for reparo_weight_decay in "${reparo_weight_decay_list[@]}"; do
+                for split in descriptive; do
+                    for i in 14; do
+                        shift_vector_path=${STEER_MODEL_NAME}
+                        save_filename="${model}_${dataset_name}_reparo_${i}_yes_no_${split}_${steering_alpha}_${reparo_z_threshold}_${reparo_z_target}_${reparo_lr}_${reparo_weight_decay}_${steer_model_base}_${max_new_tokens}"
+                        modules_to_hook="language_model.model.layers.${i}"
 
-                gpu_id=$(wait_for_free_gpu)
-                echo "[launch] gpu=$gpu_id  split=$split  lr=$reparo_lr  alpha=$steering_alpha  zthr=$reparo_z_threshold  ztgt=$reparo_z_target"
+                        gpu_id=$(wait_for_free_gpu)
+                        echo "Launching on GPU ${gpu_id}: alpha=${steering_alpha} z_thresh=${reparo_z_threshold} z_target=${reparo_z_target} lr=${reparo_lr} split=${split} layer=${i}"
 
-                CUDA_VISIBLE_DEVICES=$gpu_id python src/save_features.py \
-                    --model_name_or_path $model_name_or_path \
-                    --save_dir $save_dir \
-                    --data_dir $data_dir \
-                    --split $split \
-                    --dataset_size $dataset_size \
-                    --dataset_name $dataset_name \
-                    --hook_names "${hook_names[@]}" \
-                    --modules_to_hook $modules_to_hook \
-                    --generation_mode \
-                    --save_filename $save_filename \
-                    --save_predictions \
-                    --exact_match_modules_to_hook \
-                    --shift_vector_path $shift_vector_path \
-                    --steering_alpha $steering_alpha \
-                    --reparo_z_threshold $reparo_z_threshold \
-                    --reparo_z_target $reparo_z_target \
-                    --reparo_lr $reparo_lr \
-                    --reparo_weight_decay $reparo_weight_decay \
-                    --individual_shift \
-                    --max_new_tokens $max_new_tokens \
-                    --seed 0 &
+                        CUDA_VISIBLE_DEVICES=${gpu_id} python src/save_features.py \
+                            --model_name_or_path $model_name_or_path \
+                            --save_dir $save_dir \
+                            --data_dir $data_dir \
+                            --split $split \
+                            --dataset_size $dataset_size \
+                            --dataset_name $dataset_name \
+                            --hook_names "${hook_names[@]}" \
+                            --modules_to_hook $modules_to_hook \
+                            --generation_mode \
+                            --save_filename $save_filename \
+                            --save_predictions \
+                            --exact_match_modules_to_hook \
+                            --shift_vector_path $shift_vector_path \
+                            --steering_alpha $steering_alpha \
+                            --reparo_z_threshold $reparo_z_threshold \
+                            --reparo_z_target $reparo_z_target \
+                            --reparo_lr $reparo_lr \
+                            --reparo_weight_decay $reparo_weight_decay \
+                            --individual_shift \
+                            --max_new_tokens $max_new_tokens \
+                            --seed 0 \
+                            --descriptive_answer &
 
-                # Give the new process time to claim memory so the next
-                # iteration's free-memory check sees it as occupied.
-                sleep 30
+                    # Give the launched job time to claim VRAM before the next probe
+                    sleep "$POST_LAUNCH_SLEEP"
+                done
             done
-        done
         done
     done
 done
 done
-
-# Wait for any remaining background jobs
+# Wait for any remaining background jobs to finish
+echo "Waiting for final jobs to finish..."
 wait
+echo "All done!"
+
 
 
 

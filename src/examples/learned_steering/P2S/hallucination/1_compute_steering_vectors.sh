@@ -12,20 +12,40 @@ save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/
 
 analysis_name=learnable_steering
 
+# Define once at the top of the script
+select_gpu() {
+    local required_free=${1:-37}
+    while true; do
+        while IFS=',' read -r idx free total; do
+            free_pct=$((free * 100 / total))
+            if [ "$free_pct" -ge "$required_free" ]; then
+                echo "$idx"
+                return 0
+            fi
+        done < <(nvidia-smi --query-gpu=index,memory.free,memory.total --format=csv,noheader,nounits)
+        echo "No GPU with >= ${required_free}% free. Retrying in 30s..." >&2
+        sleep 30
+    done
+}
+
+
+GPU_ID=$(select_gpu 32)
+echo "Selected GPU $GPU_ID"
+
 
 for split in adversarial popular random; do
 
     for i in 14; do
 
-        pos_features_name=save_hidden_states_for_l2s_llava_pope_test_features_pos_answers_${i}_${split}_all_test_-1.pth
-        neg_features_name=save_hidden_states_for_l2s_llava_pope_test_features_neg_answers_${i}_${split}_all_test_-1.pth
+        pos_features_name=save_hidden_states_for_l2s_llava_pope_test_features_pos_answers_${i}_${split}_-1.pth
+        neg_features_name=save_hidden_states_for_l2s_llava_pope_test_features_neg_answers_${i}_${split}_-1.pth
 
 
         modules_to_hook="language_model.model.layers.${i};language_model.model.layers.${i}"
         save_filename=${split}_pope_test_-1
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=$GPU_ID python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --analysis_name $analysis_name \
@@ -62,19 +82,22 @@ save_dir=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination/
 
 analysis_name=learnable_steering
 
+# Re-select before Qwen (in case GPU state changed)
+GPU_ID=$(select_gpu 37)
+echo "Selected GPU $GPU_ID"
 
 for split in adversarial popular random; do
 
     for i in 17; do
 
-        pos_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_pos_answers_${i}_${split}_all_test_-1.pth
-        neg_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_neg_answers_${i}_${split}_all_test_-1.pth
+        pos_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_pos_answers_${i}_${split}_-1.pth
+        neg_features_name=save_hidden_states_for_l2s_qwen2vlinstruct_pope_test_features_neg_answers_${i}_${split}_-1.pth
 
         modules_to_hook="model.layers.${i};model.layers.${i}"
         save_filename=${split}_pope_test_-1
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/analyse_features.py \
+        CUDA_VISIBLE_DEVICES=$GPU_ID python src/analyse_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \

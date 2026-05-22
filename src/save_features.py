@@ -65,8 +65,9 @@ def inference_safety_steering(
                                                                                    force_answer=args.force_answer,
                                                                                    forced_answer_true=args.forced_answer_true,
                                                                                    descriptive_answer=args.descriptive_answer,
+                                                                                   model_response=args.model_response,
                                                                                    scenario=scenario,
-                                                                                   **{'model_name':args.model_name_or_path, 
+                                                                                   **{'model_name':args.model_name_or_path,
                                                                                       'use_safety_prompt':safety_prompt_flag},
                                                                                    )
         inputs = model_class.preprocessor(
@@ -198,6 +199,7 @@ def inference(
                                                                                    force_answer=args.force_answer,
                                                                                    forced_answer_true=args.forced_answer_true,
                                                                                    descriptive_answer=args.descriptive_answer,
+                                                                                   model_response=args.model_response,
                                                                                    scenario=scenario,
                                                                                    **{'model_name':args.model_name_or_path},
                                                                                    )
