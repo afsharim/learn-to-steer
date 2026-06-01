@@ -238,6 +238,7 @@ def apply_reparo_steering(
     include_last_prompt_token: bool = False,
     start_prompt_token_idx: int = 0,
     no_implicit_model: bool = False,
+    subspace_U: torch.Tensor = None,
 ):
 
     global PREDICTED_STEER
@@ -263,11 +264,26 @@ def apply_reparo_steering(
             # import pdb; pdb.set_trace()
             if (z > z_threshold).all():
                 with torch.set_grad_enabled(True):
-                    delta = torch.zeros_like(last_input_tokens, requires_grad=True,dtype=dtype)
-                    optimizer = torch.optim.AdamW([delta], lr=lr, weight_decay=weight_decay)
+                    if subspace_U is not None:
+                        # Subspace-Constrained Optimization: delta = U @ c (strictly inside span(U))
+                        U_d = subspace_U.to(device=last_input_tokens.device, dtype=dtype)
+                        B = last_input_tokens.shape[0]
+                        k = U_d.shape[1]
+                        c = torch.zeros(B, k, device=last_input_tokens.device, dtype=dtype, requires_grad=True)
+                        params = [c]
+                        def materialize_delta():
+                            return c @ U_d.T
+                    else:
+                        delta_param = torch.zeros_like(last_input_tokens, requires_grad=True, dtype=dtype)
+                        params = [delta_param]
+                        def materialize_delta():
+                            return delta_param
+
+                    optimizer = torch.optim.AdamW(params, lr=lr, weight_decay=weight_decay)
                     for _ in range(50):
                         optimizer.zero_grad()
 
+                        delta = materialize_delta()
                         h_steered = last_input_tokens + delta
                         h_steered = h_steered - mean_h
                         h_steered = h_steered / (h_steered.norm(dim=1, keepdim=True) + 1e-8)
@@ -278,22 +294,17 @@ def apply_reparo_steering(
                                 f.write(
                                     f"Current z: {z.detach().cpu().numpy()}, norm delta: {torch.norm(delta).detach().cpu().numpy()}\n"
                                 )
-                                # f.write(f"norm delta: {torch.norm(delta).detach().cpu().numpy()}")
-                        # print ("Current z:", z)
                         if (z < z_threshold).all():
-                            # print("Threshold reached, stopping optimization.")
                             if debug_log_path is not None:
                                 with open(debug_log_path, "a") as f:
                                     f.write("Threshold reached, stopping optimization.\n")
                             break
 
                         loss = F.mse_loss(z, z_target)
-                        # + 1e-5 * torch.norm(delta)
                         loss.backward()
                         optimizer.step()
-                        # import pdb; pdb.set_trace()
-                    
-                    PREDICTED_STEER = delta.detach()
+
+                    PREDICTED_STEER = materialize_delta().detach()
             else:
                 PREDICTED_STEER = torch.zeros_like(last_input_tokens)
         # print("Applying delta")
@@ -540,6 +551,7 @@ def shift_hidden_states(
                     include_last_prompt_token=include_last_prompt_token,
                     start_prompt_token_idx=start_prompt_token_idx,
                     no_implicit_model=no_implicit_model,
+                    subspace_U=vector.get("subspace_U"),
                 )
                 return (outputs_,) + output[1:]
             else:
@@ -556,6 +568,7 @@ def shift_hidden_states(
                     include_last_prompt_token=include_last_prompt_token,
                     start_prompt_token_idx=start_prompt_token_idx,
                     no_implicit_model=no_implicit_model,
+                    subspace_U=vector.get("subspace_U"),
                 )
                 return output
 
@@ -1025,6 +1038,16 @@ def register_hooks(
                 os.path.join(debug_log_dir, f"reparo_steering_debug_{save_filename}.txt"),
             )
 
+            subspace_U = None
+            subspace_basis_path = getattr(args, "reparo_subspace_basis_path", None)
+            if subspace_basis_path:
+                basis = torch.load(subspace_basis_path, map_location=device)
+                subspace_U = basis["U"].to(device)
+                if logger is not None:
+                    logger.info(
+                        f"Reparo subspace constraint enabled: U shape {tuple(subspace_U.shape)} loaded from {subspace_basis_path}"
+                    )
+
             vector = {
                 "encoder": encoder,
                 "mean_h": mean_h,
@@ -1037,6 +1060,7 @@ def register_hooks(
                 "z_target_value": getattr(args, "reparo_z_target", -0.06),
                 "lr": getattr(args, "reparo_lr", 5e-2),
                 "weight_decay": getattr(args, "reparo_weight_decay", 1e-2),
+                "subspace_U": subspace_U,
             }
         
         else:

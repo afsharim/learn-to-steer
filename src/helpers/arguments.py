@@ -419,6 +419,12 @@ def get_arguments():
         default=1e-2,
         help="Weight decay for the Reparo AdamW optimizer.",
     )
+    parser.add_argument(
+        "--reparo_subspace_basis_path",
+        type=str,
+        default=None,
+        help="Path to a .pth with {'U': (D, k), 'mean_shift': (D,)}. When set, Reparo constrains delta = U @ c.",
+    )
 
     parser.add_argument(
         "--force_answer",
