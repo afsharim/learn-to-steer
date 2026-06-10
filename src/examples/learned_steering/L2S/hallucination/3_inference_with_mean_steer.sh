@@ -32,7 +32,7 @@ for split in adversarial popular random; do
         modules_to_hook="language_model.model.layers.${i}"
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=4 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --data_dir $data_dir \
@@ -103,7 +103,7 @@ for split in adversarial popular random; do
         modules_to_hook="model.layers.${i}"
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=4 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \

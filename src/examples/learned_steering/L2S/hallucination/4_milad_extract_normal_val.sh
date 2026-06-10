@@ -30,7 +30,7 @@ for split in all; do
         save_filename="${model}_${dataset_name}_features_normal_${i}_${split}_${dataset_size}_val_milad"
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --save_dir $save_dir \
             --data_dir $data_dir \
@@ -97,7 +97,7 @@ for split in all; do
 
 
 
-        CUDA_VISIBLE_DEVICES=6 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --save_dir $save_dir \

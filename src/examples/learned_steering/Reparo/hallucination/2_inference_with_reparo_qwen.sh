@@ -100,16 +100,16 @@ max_new_tokens=100
 # reparo_z_threshold_list=(-0.023 -0.01 -0.007 )
 # reparo_z_target_list=(-0.033 -0.03 -0.023)
 # reparo_lr_list=(1e-1 5e-2 1e-2 5e-3 1e-3)
-steering_alpha_list=(10)
-reparo_z_threshold_list=(-0.01)
-reparo_z_target_list=(-0.03)
-reparo_lr_list=(5e-3)
-reparo_weight_decay_list=(0 1e-4 1e-3)
+steering_alpha_list=(5 8 12)
+reparo_z_threshold_list=(-0.015 -0.01 -0.008)
+reparo_z_target_list=(-0.04 -0.03 -0.03) 
+reparo_lr_list=(1e-2 1e-3)
+reparo_weight_decay_list=(0)
 hook_names=("reparo" "hallucination_metrics") # should add the evaluation right here
 
 steering_method="reparo"
 
-NUM_GPUS=4
+NUM_GPUS=6
 FREE_MEM_THRESHOLD=0.37   # require at least 38% of memory.total free
 
 # Find the first GPU (0..NUM_GPUS-1) with free/total >= FREE_MEM_THRESHOLD.
@@ -147,35 +147,36 @@ for steering_alpha in "${steering_alpha_list[@]}"; do
                     save_filename="${model}_${dataset_name}_reparo_${i}_yes_no_${split}_${steering_alpha}_${reparo_z_threshold}_${reparo_z_target}_lr${reparo_lr}_weight_decay${reparo_weight_decay}_${steer_model_base}"
                     modules_to_hook="model.layers.${i}"
 
-                gpu_id=$(wait_for_free_gpu)
-                echo "[launch] gpu=$gpu_id  split=$split  lr=$reparo_lr  alpha=$steering_alpha  zthr=$reparo_z_threshold  ztgt=$reparo_z_target"
+                    gpu_id=$(wait_for_free_gpu)
+                    echo "[launch] gpu=$gpu_id  split=$split  lr=$reparo_lr  alpha=$steering_alpha  zthr=$reparo_z_threshold  ztgt=$reparo_z_target"
 
-                CUDA_VISIBLE_DEVICES=$gpu_id python src/save_features.py \
-                    --model_name_or_path $model_name_or_path \
-                    --cache_dir $cache_dir \
-                    --save_dir $save_dir \
-                    --data_dir $data_dir \
-                    --split $split \
-                    --dataset_size $dataset_size \
-                    --dataset_name $dataset_name \
-                    --hook_names "${hook_names[@]}" \
-                    --modules_to_hook $modules_to_hook \
-                    --generation_mode \
-                    --save_filename $save_filename \
-                    --save_predictions \
-                    --exact_match_modules_to_hook \
-                    --shift_vector_path $shift_vector_path \
-                    --steering_alpha $steering_alpha \
-                    --reparo_z_threshold $reparo_z_threshold \
-                    --reparo_z_target $reparo_z_target \
-                    --reparo_lr $reparo_lr \
-                    --reparo_weight_decay $reparo_weight_decay \
-                    --individual_shift \
-                    --max_new_tokens $max_new_tokens \
-                    --seed 0 &
-                # Give the new process time to claim memory so the next
-                # iteration's free-memory check sees it as occupied.
-                sleep 30
+                    CUDA_VISIBLE_DEVICES=$gpu_id python src/save_features.py \
+                        --model_name_or_path $model_name_or_path \
+                        --cache_dir $cache_dir \
+                        --save_dir $save_dir \
+                        --data_dir $data_dir \
+                        --split $split \
+                        --dataset_size $dataset_size \
+                        --dataset_name $dataset_name \
+                        --hook_names "${hook_names[@]}" \
+                        --modules_to_hook $modules_to_hook \
+                        --generation_mode \
+                        --save_filename $save_filename \
+                        --save_predictions \
+                        --exact_match_modules_to_hook \
+                        --shift_vector_path $shift_vector_path \
+                        --steering_alpha $steering_alpha \
+                        --reparo_z_threshold $reparo_z_threshold \
+                        --reparo_z_target $reparo_z_target \
+                        --reparo_lr $reparo_lr \
+                        --reparo_weight_decay $reparo_weight_decay \
+                        --individual_shift \
+                        --max_new_tokens $max_new_tokens \
+                        --delta_save_path "hallucination_deltas/${save_filename}_deltas.pt" \
+                        --seed 0 &
+                    # Give the new process time to claim memory so the next
+                    # iteration's free-memory check sees it as occupied.
+                    sleep 30
             done
         done
         done

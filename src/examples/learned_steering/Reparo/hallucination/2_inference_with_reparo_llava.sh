@@ -18,16 +18,16 @@ dataset_name=pope_test
 dataset_size=-1
 max_new_tokens=100
 steering_alpha_list=(4)
-reparo_z_threshold_list=(-0.04)
-reparo_z_target_list=(-0.05)
+reparo_z_threshold_list=(-0.04 -0.05)
+reparo_z_target_list=(-0.05 -0.06)
 reparo_lr_list=(1e-2)
-reparo_weight_decay_list=(1e-4)
+reparo_weight_decay_list=(0)
 layer_list=(14)
 hook_names=("reparo" "hallucination_metrics")
 
 steering_method="reparo"
 
-NUM_GPUS=4
+NUM_GPUS=8
 FREE_MEM_THRESHOLD=0.31   # require at least 36% of memory.total free
 
 # Find the first GPU (0..NUM_GPUS-1) with free/total >= FREE_MEM_THRESHOLD.

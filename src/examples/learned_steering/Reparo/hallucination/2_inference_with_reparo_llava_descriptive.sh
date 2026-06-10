@@ -15,15 +15,18 @@ save_dir=${YOUR_SAVE_DIR}
 
 
 dataset_name=pope_test
+
+
+
 dataset_size=-1
-max_new_tokens=512
-steering_alpha_list=(1 4)
+max_new_tokens=100
+steering_alpha_list=(1)
 # reparo_z_threshold_list=(-0.015 -0.04 0 -0.01 -0.02)
 # reparo_z_target_list=(-0.045 -0.05 -0.01 -0.02 -0.03)
-reparo_z_threshold_list=(0)
-reparo_z_target_list=(-0.01)
-reparo_lr_list=(5e-2)
-reparo_weight_decay_list=(0 1e-4)
+reparo_z_threshold_list=(-0.004)
+reparo_z_target_list=(-1)
+reparo_lr_list=(1e-2)
+reparo_weight_decay_list=(0)
 hook_names=("reparo" "hallucination_metrics") # should add the evaluation right here
 
 steering_method="reparo"

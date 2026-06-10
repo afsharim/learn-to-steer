@@ -223,7 +223,7 @@ def set_steering_vector(vector: torch.Tensor = None):
 # REPARO STEERING ADDITIONS
 #=========================================
 import torch.nn.functional as F
-global PREDICTED_STEER
+PREDICTED_STEER = None
 def apply_reparo_steering(
     x: torch.Tensor,
     encoder: Any,
@@ -239,6 +239,7 @@ def apply_reparo_steering(
     start_prompt_token_idx: int = 0,
     no_implicit_model: bool = False,
     subspace_U: torch.Tensor = None,
+    delta_save_path: str = None,
 ):
 
     global PREDICTED_STEER
@@ -279,8 +280,9 @@ def apply_reparo_steering(
                         def materialize_delta():
                             return delta_param
 
-                    optimizer = torch.optim.AdamW(params, lr=lr, weight_decay=weight_decay)
-                    for _ in range(50):
+                    optimizer = torch.optim.AdamW(params, lr=lr, weight_decay=0)
+                    # lambda_reg = weight_decay
+                    for _ in range(100):
                         optimizer.zero_grad()
 
                         delta = materialize_delta()
@@ -300,6 +302,7 @@ def apply_reparo_steering(
                                     f.write("Threshold reached, stopping optimization.\n")
                             break
 
+
                         loss = F.mse_loss(z, z_target)
                         loss.backward()
                         optimizer.step()
@@ -307,6 +310,11 @@ def apply_reparo_steering(
                     PREDICTED_STEER = materialize_delta().detach()
             else:
                 PREDICTED_STEER = torch.zeros_like(last_input_tokens)
+            if delta_save_path is not None:
+                os.makedirs(os.path.dirname(delta_save_path) or ".", exist_ok=True)
+                existing = torch.load(delta_save_path) if os.path.exists(delta_save_path) else []
+                existing.append(PREDICTED_STEER.cpu())
+                torch.save(existing, delta_save_path)
         # print("Applying delta")
         vector = PREDICTED_STEER
 
@@ -552,6 +560,7 @@ def shift_hidden_states(
                     start_prompt_token_idx=start_prompt_token_idx,
                     no_implicit_model=no_implicit_model,
                     subspace_U=vector.get("subspace_U"),
+                    delta_save_path=vector.get("delta_save_path"),
                 )
                 return (outputs_,) + output[1:]
             else:
@@ -569,6 +578,7 @@ def shift_hidden_states(
                     start_prompt_token_idx=start_prompt_token_idx,
                     no_implicit_model=no_implicit_model,
                     subspace_U=vector.get("subspace_U"),
+                    delta_save_path=vector.get("delta_save_path"),
                 )
                 return output
 
@@ -1061,6 +1071,7 @@ def register_hooks(
                 "lr": getattr(args, "reparo_lr", 5e-2),
                 "weight_decay": getattr(args, "reparo_weight_decay", 1e-2),
                 "subspace_U": subspace_U,
+                "delta_save_path": getattr(args, "delta_save_path", None),
             }
         
         else:

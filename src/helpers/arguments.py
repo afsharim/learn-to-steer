@@ -425,6 +425,12 @@ def get_arguments():
         default=None,
         help="Path to a .pth with {'U': (D, k), 'mean_shift': (D,)}. When set, Reparo constrains delta = U @ c.",
     )
+    parser.add_argument(
+        "--delta_save_path",
+        type=str,
+        default=None,
+        help="If set, each computed Reparo delta is appended to a list and saved as a .pt file at this path.",
+    )
 
     parser.add_argument(
         "--force_answer",

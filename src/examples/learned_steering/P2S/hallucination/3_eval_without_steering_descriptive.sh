@@ -15,14 +15,14 @@ save_dir=${YOUR_SAVE_DIR}
 dataset_name=pope_test
 dataset_size=-1
 
-max_new_tokens=512
+max_new_tokens=128
 hook_names=("hallucination_metrics")
 
 
 
 for split in descriptive; do
     save_filename="${model}_${dataset_name}_eval_no_steer_${split}_${dataset_size}_${max_new_tokens}"
-    CUDA_VISIBLE_DEVICES=2 python src/save_features.py \
+    CUDA_VISIBLE_DEVICES=5 python src/save_features.py \
         --model_name_or_path $model_name_or_path \
         --data_dir $data_dir \
         --dataset_name $dataset_name \

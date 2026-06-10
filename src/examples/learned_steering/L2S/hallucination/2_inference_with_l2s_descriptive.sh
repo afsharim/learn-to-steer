@@ -15,7 +15,7 @@ save_dir=${YOUR_SAVE_DIR}
 
 dataset_name=pope_test
 dataset_size=-1
-max_new_tokens=512
+max_new_tokens=128
 steering_alpha=2.2
 hook_names=("shift_hidden_states_learned_steer" "hallucination_metrics") # should add the evaluation right here
 

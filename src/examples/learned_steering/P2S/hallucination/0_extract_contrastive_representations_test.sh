@@ -1,90 +1,90 @@
-# *********************************
-# CODE TO GENERATE THE POSITIVE (CORRECT) COMPLETIONS AND SAVING THEIR STATES
-# *********************************
-model_name_or_path=llava-hf/llava-1.5-7b-hf
-model=llava
+# # *********************************
+# # CODE TO GENERATE THE POSITIVE (CORRECT) COMPLETIONS AND SAVING THEIR STATES
+# # *********************************
+# model_name_or_path=llava-hf/llava-1.5-7b-hf
+# model=llava
 
 
-# YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test # TO BE REPLACED WITH YOUR TEST DIR FOR POPE (NO OFFICIAL PARTITION)
-YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
-# YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination # TO BE REPLACED WITH YOUR SAVE DIR FOR POPE
-YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
+# # YOUR_DATA_DIR=/data/khayatan/datasets/POPE/test # TO BE REPLACED WITH YOUR TEST DIR FOR POPE (NO OFFICIAL PARTITION)
+# YOUR_DATA_DIR=/research/hal-afsharim/learn-to-steer/data/pope/test
+# # YOUR_SAVE_DIR=/data/khayatan/Hallucination/POPE/hallucination # TO BE REPLACED WITH YOUR SAVE DIR FOR POPE
+# YOUR_SAVE_DIR=/research/hal-afsharim/learn-to-steer/Hallucination/POPE/hallucination
 
 
-data_dir=${YOUR_DATA_DIR}
-save_dir=${YOUR_SAVE_DIR}
+# data_dir=${YOUR_DATA_DIR}
+# save_dir=${YOUR_SAVE_DIR}
 
 
-dataset_name=pope_test
-dataset_size=-1
+# dataset_name=pope_test
+# dataset_size=-1
 
-max_new_tokens=100
-hook_names=("save_hidden_states_for_l2s")
-
-
-for split in adversarial popular random; do
-
-    for i in 14; do
-
-        modules_to_hook="model.layers.${i}"
-        modules_to_hook="language_model.model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_${dataset_size}"
+# max_new_tokens=100
+# hook_names=("save_hidden_states_for_l2s")
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
-            --model_name_or_path $model_name_or_path \
-            --data_dir $data_dir \
-            --dataset_name $dataset_name \
-            --split $split \
-            --annotation_file annotations.json \
-            --dataset_size $dataset_size \
-            --save_dir $save_dir \
-            --max_new_tokens $max_new_tokens \
-            --hook_names $hook_names \
-            --modules_to_hook $modules_to_hook \
-            --generation_mode \
-            --save_filename ${save_filename} \
-            --force_answer \
-            --forced_answer_true \
-            --exact_match_modules_to_hook \
-            --end_special_tokens "</s>" \
-            --seed 0
-    done
-done
+# for split in adversarial popular random; do
+
+#     for i in 14; do
+
+#         modules_to_hook="model.layers.${i}"
+#         modules_to_hook="language_model.model.layers.${i}"
+#         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_${dataset_size}"
+
+
+#         CUDA_VISIBLE_DEVICES=4 python src/save_features.py \
+#             --model_name_or_path $model_name_or_path \
+#             --data_dir $data_dir \
+#             --dataset_name $dataset_name \
+#             --split $split \
+#             --annotation_file annotations.json \
+#             --dataset_size $dataset_size \
+#             --save_dir $save_dir \
+#             --max_new_tokens $max_new_tokens \
+#             --hook_names $hook_names \
+#             --modules_to_hook $modules_to_hook \
+#             --generation_mode \
+#             --save_filename ${save_filename} \
+#             --force_answer \
+#             --forced_answer_true \
+#             --exact_match_modules_to_hook \
+#             --end_special_tokens "</s>" \
+#             --seed 0 
+#     done
+# done
 
 
 
-# *********************************
-# CODE TO GENERATE THE NEGATIVE (INCORRECT) COMPLETIONS AND SAVING THEIR STATES
-# *********************************
+# # *********************************
+# # CODE TO GENERATE THE NEGATIVE (INCORRECT) COMPLETIONS AND SAVING THEIR STATES
+# # *********************************
 
-for split in adversarial popular random; do
+# for split in adversarial popular random; do
 
-    for i in 14; do
+#     for i in 14; do
 
-        modules_to_hook="model.layers.${i}"
-        modules_to_hook="language_model.model.layers.${i}"
-        save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_${dataset_size}"
+#         modules_to_hook="model.layers.${i}"
+#         modules_to_hook="language_model.model.layers.${i}"
+#         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=0 python src/save_features.py \
-            --model_name_or_path $model_name_or_path \
-            --data_dir $data_dir \
-            --dataset_name $dataset_name \
-            --dataset_size $dataset_size \
-            --split $split \
-            --save_dir $save_dir \
-            --max_new_tokens $max_new_tokens \
-            --hook_names $hook_names \
-            --modules_to_hook $modules_to_hook \
-            --generation_mode \
-            --save_filename ${save_filename} \
-            --force_answer \
-            --exact_match_modules_to_hook \
-            --end_special_tokens "</s>" \
-            --seed 0
-    done
-done
+#         CUDA_VISIBLE_DEVICES=4 python src/save_features.py \
+#             --model_name_or_path $model_name_or_path \
+#             --data_dir $data_dir \
+#             --dataset_name $dataset_name \
+#             --dataset_size $dataset_size \
+#             --split $split \
+#             --save_dir $save_dir \
+#             --max_new_tokens $max_new_tokens \
+#             --hook_names $hook_names \
+#             --modules_to_hook $modules_to_hook \
+#             --generation_mode \
+#             --save_filename ${save_filename} \
+#             --force_answer \
+#             --exact_match_modules_to_hook \
+#             --end_special_tokens "</s>" \
+#             --seed 0 
+#     done
+# done
 
 
 
@@ -139,7 +139,7 @@ for split in adversarial popular random; do
         save_filename="${model}_${dataset_name}_features_pos_answers_${i}_${split}_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=7 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
@@ -158,7 +158,7 @@ for split in adversarial popular random; do
             --forced_answer_true \
             --exact_match_modules_to_hook \
             --end_special_tokens "</s>" \
-            --seed 0
+            --seed 0 
     done
 done
 
@@ -175,7 +175,7 @@ for split in adversarial popular random; do
         save_filename="${model}_${dataset_name}_features_neg_answers_${i}_${split}_${dataset_size}"
 
 
-        CUDA_VISIBLE_DEVICES=1 python src/save_features.py \
+        CUDA_VISIBLE_DEVICES=7 python src/save_features.py \
             --model_name_or_path $model_name_or_path \
             --cache_dir $cache_dir \
             --data_dir $data_dir \
